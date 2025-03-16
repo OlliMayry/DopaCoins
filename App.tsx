@@ -1,20 +1,31 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+// app.tsx
+import React, { useState } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import Home from './components/Home';
+import Coin from './components/Coin';
+import Case from './components/Case';
 
-export default function App() {
+const Stack = createStackNavigator();
+
+const App: React.FC = () => {
+  const [tokenCount, setTokenCount] = useState(100);
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Home">
+        <Stack.Screen name="Home">
+          {(props) => <Home {...props} tokenCount={tokenCount} />}
+        </Stack.Screen>
+        <Stack.Screen name="Coin" options={{ title: 'Coin Flip' }}>
+          {(props) => <Coin {...props} tokenCount={tokenCount} setTokenCount={setTokenCount} />}
+        </Stack.Screen>
+        <Stack.Screen name="Case" options={{ title: 'Cases' }}>
+          {(props) => <Case {...props} tokenCount={tokenCount} setTokenCount={setTokenCount} />}
+        </Stack.Screen>
+      </Stack.Navigator>
+    </NavigationContainer>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default App;
