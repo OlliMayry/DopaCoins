@@ -275,7 +275,8 @@ const styles = StyleSheet.create({
   betContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20, // Add margin to separate from other elements
+    marginTop: 30, // Increased margin
+    marginBottom: 50, // Added bottom margin to avoid overlap with outcome
   },
   betText: {
     fontSize: 16,
@@ -295,7 +296,7 @@ const styles = StyleSheet.create({
   },
   outcomeContainer: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 100, // Adjusted the bottom position to give more space
     left: 0,
     right: 0,
     alignItems: 'center',
@@ -307,5 +308,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+
 
 export default Coin;

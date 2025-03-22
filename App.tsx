@@ -5,6 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import Home from './components/Home';
 import Coin from './components/Coin';
 import Case from './components/Case';
+import Roulette from './components/Roulette';
 
 const Stack = createStackNavigator();
 
@@ -22,6 +23,9 @@ const App: React.FC = () => {
         </Stack.Screen>
         <Stack.Screen name="Case" options={{ title: 'Cases' }}>
           {(props) => <Case {...props} tokenCount={tokenCount} setTokenCount={setTokenCount} />}
+        </Stack.Screen>
+        <Stack.Screen name="Roulette" options={{ title: 'Roulette' }}>
+          {(props) => <Roulette {...props} tokenCount={tokenCount} setTokenCount={setTokenCount} />}
         </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>

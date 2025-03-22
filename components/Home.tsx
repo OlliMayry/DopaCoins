@@ -16,6 +16,9 @@ const Home: React.FC<HomeProps> = ({ navigation, tokenCount }) => {
   const handleOpenCase = () => {
     navigation.navigate('Case');
   };
+  const handlePlayRoulette = () => {
+    navigation.navigate('Roulette');
+  };
 
   return (
     <View style={styles.container}>
@@ -29,6 +32,9 @@ const Home: React.FC<HomeProps> = ({ navigation, tokenCount }) => {
       {/* Cases Button */}
       <TouchableOpacity onPress={handleOpenCase} style={styles.button}>
         <Text style={styles.buttonText}>Cases</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={handlePlayRoulette} style={styles.button}>
+        <Text style={styles.buttonText}>Roulette</Text>
       </TouchableOpacity>
     </View>
   );
