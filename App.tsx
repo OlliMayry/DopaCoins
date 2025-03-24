@@ -15,7 +15,7 @@ const App: React.FC = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Home">
-        <Stack.Screen name="Home">
+        <Stack.Screen name="Home" options={{ title: 'DopaCoins' }}>
           {(props) => <Home {...props} tokenCount={tokenCount} />}
         </Stack.Screen>
         <Stack.Screen name="Coin" options={{ title: 'Coin Flip' }}>

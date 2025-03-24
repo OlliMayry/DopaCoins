@@ -22,7 +22,7 @@ const Home: React.FC<HomeProps> = ({ navigation, tokenCount }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome to Coin Flip Game</Text>
+      <Text style={styles.title}>DopaCoins</Text>
       <View style={styles.tokenContainer}>
       <Text style={styles.tokenText}>{`Coins: ${tokenCount}`}</Text>
       </View>

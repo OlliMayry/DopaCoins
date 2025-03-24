@@ -42,8 +42,8 @@ const Roulette: React.FC<RouletteProps> = ({ tokenCount, setTokenCount }) => {
         }
     
         return '';
-    }; 
-    
+    };
+
     const spinRoulette = () => {
         if (!selectedBet || isSpinning || tokenCount < betAmount) {
             Alert.alert('Alert', 'Please place a valid bet before spinning.');
@@ -58,7 +58,7 @@ const Roulette: React.FC<RouletteProps> = ({ tokenCount, setTokenCount }) => {
     
         Animated.timing(spinValue, {
             toValue: 1,
-            duration: 2000,
+            duration: 3000, // Increased duration by 1000ms (1 second)
             easing: Easing.out(Easing.exp),
             useNativeDriver: true,
         }).start(() => {
@@ -76,7 +76,6 @@ const Roulette: React.FC<RouletteProps> = ({ tokenCount, setTokenCount }) => {
             } else if (selectedBet?.toLowerCase() === 'black' && winningColor === 'black') {
                 payoutMultiplier = 2; // Black bet
             }
-            
     
             let currentWinAmount = betAmount * payoutMultiplier;
             setTokenCount(prev => prev + currentWinAmount);
@@ -86,20 +85,21 @@ const Roulette: React.FC<RouletteProps> = ({ tokenCount, setTokenCount }) => {
         });
     };
     
-
     return (
         <View style={styles.container}>
             <Animated.View style={[styles.wheel, { 
                 transform: [{ rotate: spinValue.interpolate({
                     inputRange: [0, 1],
-                    outputRange: ['0deg', '360deg']
+                    outputRange: ['0deg', '1440deg'] // Spins 4 full rotations instead of 1
                 }) }], 
                 backgroundColor: wheelColor // Dynamic background color based on spin result
-            }]}>
+            }]} >
                 <Text style={styles.wheelText}>{winningNumber !== null ? winningNumber : '?'}</Text>
             </Animated.View>
 
-            <Text style={styles.tokenText}>{`Coins: ${tokenCount}`}</Text>
+            <View style={styles.tokenContainer}>
+                <Text style={styles.tokenText}>{`Coins: ${tokenCount}`}</Text>
+            </View>
 
             <TouchableOpacity onPress={spinRoulette} style={[styles.button, !selectedBet && styles.disabledButton]}>
                 <Text style={styles.buttonText}>Spin</Text>
@@ -129,7 +129,7 @@ const Roulette: React.FC<RouletteProps> = ({ tokenCount, setTokenCount }) => {
             
             {winAmount > 0 && (
                 <Text style={[styles.winText, { position: 'absolute', top: '70%' }]}>
-                    {`You won: ${winAmount} tokens!`}
+                    {`You won: ${winAmount} coins!`}
                 </Text>
             )}
         </View>
@@ -165,6 +165,11 @@ const styles = StyleSheet.create({
     buttonText: {
         color: '#fff',
     },
+    tokenContainer: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+    },
     tokenText: {
         fontSize: 16,
     },
@@ -189,3 +194,4 @@ const styles = StyleSheet.create({
 });
 
 export default Roulette;
+

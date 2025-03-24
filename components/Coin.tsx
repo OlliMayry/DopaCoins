@@ -11,17 +11,17 @@ interface CoinProps {
 }
 
 const Coin: React.FC<CoinProps> = ({ navigation, tokenCount, setTokenCount }) => {
-  const [side, setSide] = useState<'Blue' | 'Red' | 'Standing'>(null!);
+  const [side, setSide] = useState<'Blue' | 'Red' | 'Standing' | null>(null);
   const [selectedColor, setSelectedColor] = useState<'Blue' | 'Red' | 'Standing' | null>(null);
   const [blueCount, setBlueCount] = useState(0);
   const [redCount, setRedCount] = useState(0);
   const [standingCount, setStandingCount] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false); // Track animation state
-  const [betAmount, setBetAmount] = useState(0); // Initial bet amount
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [betAmount, setBetAmount] = useState(0);  // Track the bet amount
   const [betModalVisible, setBetModalVisible] = useState(false);
   const [showBetWarning, setShowBetWarning] = useState(false);
-  const [winAmount, setWinAmount] = useState(0);  // Track win amount
-  const [showWinAmount, setShowWinAmount] = useState(false); // Show win amount after animation
+  const [winAmount, setWinAmount] = useState(0);  // Track the win amount
+  const [showWinAmount, setShowWinAmount] = useState(false);  // Control win amount visibility
   
   const handlePlaceBet = (color: 'Blue' | 'Red' | 'Standing', amount: number) => {
     console.log(`Placed bet on ${color} with amount ${amount}`);
@@ -48,44 +48,57 @@ const Coin: React.FC<CoinProps> = ({ navigation, tokenCount, setTokenCount }) =>
     }
 
     setIsAnimating(true);
-    setShowWinAmount(false);  // Hide win amount initially before flip starts
+    setShowWinAmount(false);  // Hide win amount before flip starts
     setTokenCount((prevCount) => prevCount - betAmount);
 
     const randomNumber = Math.random();
     let winMultiplier = 1;
-    let currentWinAmount = 0;  // Variable to track the win amount
+    let currentWinAmount = 0;
 
+    // Determine the win multiplier
     if (randomNumber < 0.05) {
       setSide('Standing');
-      winMultiplier = selectedColor === 'Standing' ? 10 : 0; // User wins 10x tokens for 'Standing'
+      winMultiplier = selectedColor === 'Standing' ? 20 : 0;
     } else {
       const randomSide = Math.random() < 0.5 ? 'Blue' : 'Red';
       setSide(randomSide);
 
       if (randomSide === selectedColor) {
-        winMultiplier = 2; // User wins 2x tokens for matching color
+        winMultiplier = 2;  // User wins 2x tokens
       } else {
-        winMultiplier = 0; // User loses the bet if it doesn't match the result
+        winMultiplier = 0;  // User loses if the result doesn't match
       }
     }
+
     currentWinAmount = betAmount * winMultiplier;
 
-    Animated.timing(spinValue, {
-      toValue: 1,
-      duration: 1000,
-      easing: Easing.linear,
-      useNativeDriver: true,
-    }).start(() => {
+    const spinAnimation = Animated.sequence([
+      Animated.timing(spinValue, {
+        toValue: 1,
+        duration: 1500,  // Initial fast spin
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+      Animated.timing(spinValue, {
+        toValue: 1,
+        duration: 1000,  // Slow down the final spins
+        easing: Easing.ease,
+        useNativeDriver: true,
+      }),
+    ]);
+
+    spinAnimation.start(() => {
       setIsAnimating(false);
-      setTokenCount((prevCount) => prevCount + currentWinAmount); // Update token count after animation
-      setWinAmount(currentWinAmount);  // Set win amount after the coin flip
-      setShowWinAmount(true);  // Show win amount after animation
+      setTokenCount((prevCount) => prevCount + currentWinAmount);
+      setWinAmount(currentWinAmount);
+      setShowWinAmount(true);
     });
+
     setShowBetWarning(false);
   };
 
   const resetResults = () => {
-    setSide(null!);
+    setSide(null);
     setBlueCount(0);
     setRedCount(0);
     setStandingCount(0);
@@ -123,25 +136,27 @@ const Coin: React.FC<CoinProps> = ({ navigation, tokenCount, setTokenCount }) =>
 
   const frontSpin = spinValue.interpolate({
     inputRange: [0, 0.5, 1],
-    outputRange: ['0deg', '90deg', '180deg'],
+    outputRange: ['0deg', '1800deg', '3600deg'],
   });
 
   const backSpin = spinValue.interpolate({
     inputRange: [0, 0.5, 1],
-    outputRange: ['180deg', '270deg', '360deg'],
+    outputRange: ['180deg', '1980deg', '3600deg'],
   });
 
   const getCircleColor = (): string => {
     if (isAnimating) {
-      return '#ccc';
+      return '#ccc';  // Gray when animating
     } else {
       switch (side) {
         case 'Blue':
-          return '#3498db';
+          return '#3498db';  // Blue
         case 'Red':
-          return '#e74c3c';
+          return '#e74c3c';  // Red
+        case 'Standing':
+          return '#f1c40f';  // Yellow for Standing
         default:
-          return 'transparent';
+          return '#999';  // Gray by default
       }
     }
   };
@@ -150,19 +165,13 @@ const Coin: React.FC<CoinProps> = ({ navigation, tokenCount, setTokenCount }) =>
     <View style={styles.container}>
       <View style={styles.coinContainer}>
         <Animated.View
-          style={[
-            styles.front,
-            { transform: [{ rotateY: frontSpin }], backgroundColor: getCircleColor() },
-          ]}
+          style={[styles.front, { transform: [{ rotateY: frontSpin }], backgroundColor: getCircleColor() }]}
         />
         <Animated.View
-          style={[
-            styles.back,
-            { transform: [{ rotateY: backSpin }], backgroundColor: getCircleColor() },
-          ]}
+          style={[styles.back, { transform: [{ rotateY: backSpin }], backgroundColor: getCircleColor() }]}
         />
       </View>
-      
+
       <View style={styles.results}>
         <Text>{`Results:`}</Text>
         <Text>{`Blue: ${blueCount}`}</Text>
@@ -198,16 +207,15 @@ const Coin: React.FC<CoinProps> = ({ navigation, tokenCount, setTokenCount }) =>
 
       {showBetWarning && (
         <View style={styles.warningContainer}>
-          <Text style={styles.warningText}>Not enough coins. Change the bet or get more.</Text>
+          <Text style={styles.warningText}>Not enough coins. Change your bet or earn more.</Text>
         </View>
       )}
 
       <View style={styles.outcomeContainer}>
-        {side && !isAnimating && <Text style={styles.resultText}>{`Outcome: ${side}`}</Text>}
-        {showWinAmount && <Text style={styles.winAmountText}>{`Win: ${winAmount}`}</Text>}
+        {side && !isAnimating && <Text style={styles.resultText}>{`Result: ${side}`}</Text>}
+        {showWinAmount && <Text style={styles.winAmountText}>{winAmount > 0 ? `Win: ${winAmount}` : ''}</Text>}
       </View>
 
-      {/* Move the Current Bet below all buttons */}
       <View style={styles.betContainer}>
         {selectedColor && (
           <Text style={styles.betText}>{`Current Bet: "${betAmount}" on ${selectedColor}`}</Text>
@@ -259,7 +267,6 @@ const styles = StyleSheet.create({
   },
   resultText: {
     fontSize: 18,
-    color: '#555',
   },
   results: {
     marginTop: 20,
@@ -275,17 +282,21 @@ const styles = StyleSheet.create({
   betContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 30, // Increased margin
-    marginBottom: 50, // Added bottom margin to avoid overlap with outcome
+    marginTop: 35,
+    marginBottom: 50,
   },
   betText: {
     fontSize: 16,
   },
   warningContainer: {
+    position: 'absolute',
+    top: 40,
     backgroundColor: '#e74c3c',
     padding: 10,
     borderRadius: 5,
-    marginTop: 10,
+    width: '80%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   warningText: {
     color: '#fff',
@@ -296,18 +307,19 @@ const styles = StyleSheet.create({
   },
   outcomeContainer: {
     position: 'absolute',
-    bottom: 100, // Adjusted the bottom position to give more space
+    bottom: 70,
     left: 0,
     right: 0,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 10,
   },
   winAmountText: {
     fontSize: 18,
     color: '#4CAF50',
     fontWeight: 'bold',
+    marginTop: 10,
   },
 });
-
 
 export default Coin;
