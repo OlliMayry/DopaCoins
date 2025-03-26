@@ -1,0 +1,235 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+
+interface CrashProps {
+  tokenCount: number;
+  setTokenCount: React.Dispatch<React.SetStateAction<number>>;
+}
+
+// Helper function to generate crash multiplier
+const generateCrashMultiplier = () => {
+  const r = Math.random();
+  if (r < 0.35) {
+    // 0-0.99x: 35% chance
+    return Math.random() * 0.99;
+  } else if (r < 0.70) {
+    // 1-2.99x: 35% chance
+    return 1 + Math.random() * (2.99 - 1);
+  } else if (r < 0.90) {
+    // 3-9.99x: 20% chance
+    return 3 + Math.random() * (9.99 - 3);
+  } else if (r < 0.975) {
+    // 10-24.99x: 7.5% chance
+    return 10 + Math.random() * (24.99 - 10);
+  } else if (r < 0.9975) {
+    // 25-49.99x: 2.25% chance
+    return 25 + Math.random() * (49.99 - 25);
+  } else {
+    // 50-1000x: 0.25% chance
+    return 50 + Math.random() * (1000 - 50);
+  }
+};
+
+const Crash: React.FC<CrashProps> = ({ tokenCount, setTokenCount }) => {
+  const [isRolling, setIsRolling] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [multiplier, setMultiplier] = useState(0);
+  const [betAmount, setBetAmount] = useState(1);
+  const [cashOutAmount, setCashOutAmount] = useState<number | null>(null);
+  const [resultMessage, setResultMessage] = useState<string | null>(null);
+  const [crashMultiplier, setCrashMultiplier] = useState<number | null>(null);
+  const [cashOutMultiplier, setCashOutMultiplier] = useState<number | null>(null);
+
+
+  useEffect(() => {
+    if (isPlaying) {
+      const timer = setInterval(() => {
+        setMultiplier((prev) => {
+          const nextMultiplier = prev + Math.random() * 0.1;
+          if (crashMultiplier !== null && nextMultiplier >= crashMultiplier) {
+            clearInterval(timer);
+            crash(nextMultiplier);
+          }
+          return nextMultiplier;
+        });
+      }, 100);
+      return () => clearInterval(timer);
+    }
+  }, [isPlaying, crashMultiplier]);
+
+  const startGame = () => {
+    if (isRolling || tokenCount < betAmount) return;
+    setTokenCount((prev) => prev - betAmount);
+    setIsRolling(true);
+    setIsPlaying(true);
+    setMultiplier(0);
+    setResultMessage(null);
+    setCashOutAmount(null);
+    // Use our helper to set the crash multiplier based on the probability distribution
+    setCrashMultiplier(generateCrashMultiplier());
+  };
+
+  const crash = (finalMultiplier: number) => {
+    setIsRolling(false);
+    setIsPlaying(false);
+    setResultMessage(`Crashed At x${finalMultiplier.toFixed(2)}`);
+  };
+
+  const cashOut = () => {
+    if (isRolling && multiplier > 0) {
+      setIsRolling(false);
+      const earned = betAmount * multiplier;
+      setCashOutAmount(Math.round(earned * 100) / 100);
+      setTokenCount((prev) => prev + earned);
+      setCashOutMultiplier(multiplier);  // Save the multiplier at the time of cashout
+      //setResultMessage(`Cashed Out At x${multiplier.toFixed(2)}`);
+    }
+  };
+
+  const handleBetAmountChange = (amount: number) => {
+    setBetAmount((prev) => Math.max(1, prev + amount));
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.tokenContainer}>
+        <Text style={styles.tokenText}>Coins: {tokenCount.toFixed(2)}</Text>
+      </View>
+
+      {isPlaying ? (
+        <Text style={styles.rollingText}>Rolling...</Text>
+      ) : (
+        <Text style={styles.crashText}>{resultMessage || ''}</Text>
+      )}
+
+      <Text style={styles.multiplierText}>Multiplier: x{multiplier.toFixed(2)}</Text>
+
+      <TouchableOpacity
+        onPress={startGame}
+        style={[styles.startButton, isPlaying ? styles.disabledButton : {}]}
+        disabled={isPlaying}
+      >
+        <Text style={styles.buttonText}>Start Game</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={cashOut}
+        style={[styles.cashOutButton, isRolling ? styles.rollingButton : styles.disabledButton]}
+        disabled={!isRolling}
+      >
+        <Text style={styles.buttonText}>Cash Out</Text>
+      </TouchableOpacity>
+
+      <View style={styles.resultContainer}>
+        <Text style={styles.cashOutText}>
+          {cashOutAmount !== null ? `Cashed Out: ${cashOutAmount.toFixed(2)} (x${cashOutMultiplier?.toFixed(2)})` : ''}
+        </Text>
+      </View>
+
+      <View style={styles.betControls}>
+        <TouchableOpacity onPress={() => handleBetAmountChange(-1)} style={styles.betButton}>
+          <Text style={styles.betText}>-</Text>
+        </TouchableOpacity>
+        <Text style={styles.betAmount}>Bet: {betAmount}</Text>
+        <TouchableOpacity onPress={() => handleBetAmountChange(1)} style={styles.betButton}>
+          <Text style={styles.betText}>+</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  tokenContainer: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
+  tokenText: {
+    fontSize: 16,
+  },
+  rollingText: {
+    fontSize: 20,
+    color: '#f39c12',
+    fontWeight: 'bold',
+    minHeight: 25,
+  },
+  crashText: {
+    fontSize: 20,
+    color: 'red',
+    fontWeight: 'bold',
+  },
+  multiplierText: {
+    fontSize: 20,
+    marginVertical: 20,
+  },
+  startButton: {
+    width: 200,
+    height: 50,
+    backgroundColor: '#3498db',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 10,
+  },
+  disabledButton: {
+    backgroundColor: '#95a5a6',
+  },
+  rollingButton: {
+    backgroundColor: '#e74c3c',
+  },
+  buttonText: {
+    fontSize: 18,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  cashOutButton: {
+    width: 200,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 10,
+    marginTop: 10,
+  },
+  resultContainer: {
+    minHeight: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  cashOutText: {
+    fontSize: 20,
+    color: '#4CAF50',
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  betControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  betButton: {
+    width: 50,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#27ae60',
+    borderRadius: 10,
+    marginHorizontal: 10,
+  },
+  betText: {
+    fontSize: 24,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  betAmount: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+});
+
+export default Crash;

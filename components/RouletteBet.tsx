@@ -6,6 +6,8 @@ interface RouletteBetProps {
     onClose: () => void;
     onPlaceBet: (betType: string, amount: number) => void;
     onClearBet: () => void;
+    selectedBet: string | null; // Accept selected bet
+    betAmount: number;           // Accept bet amount
 }
 
 const RouletteBet: React.FC<RouletteBetProps> = ({ isVisible, onClose, onPlaceBet, onClearBet }) => {
@@ -148,6 +150,7 @@ const RouletteBet: React.FC<RouletteBetProps> = ({ isVisible, onClose, onPlaceBe
                         style={styles.input}
                         placeholder="Enter Bet Amount"
                         keyboardType="numeric"
+                        value={betAmount} // Add this line
                         onChangeText={(text) => setBetAmount(text)}
                     />
 

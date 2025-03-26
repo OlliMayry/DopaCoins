@@ -180,7 +180,7 @@ const Coin: React.FC<CoinProps> = ({ navigation, tokenCount, setTokenCount }) =>
       </View>
 
       <View style={styles.tokenContainer}>
-        <Text style={styles.tokenText}>{`Coins: ${tokenCount}`}</Text>
+        <Text style={styles.tokenText}>Coins: {tokenCount.toFixed(2)}</Text>
       </View>
 
       <TouchableOpacity

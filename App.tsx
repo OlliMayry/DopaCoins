@@ -6,6 +6,8 @@ import Home from './components/Home';
 import Coin from './components/Coin';
 import Case from './components/Case';
 import Roulette from './components/Roulette';
+import Crash from './components/Crash';
+import Keno from './components/Keno';
 
 const Stack = createStackNavigator();
 
@@ -26,6 +28,12 @@ const App: React.FC = () => {
         </Stack.Screen>
         <Stack.Screen name="Roulette" options={{ title: 'Roulette' }}>
           {(props) => <Roulette {...props} tokenCount={tokenCount} setTokenCount={setTokenCount} />}
+        </Stack.Screen>
+        <Stack.Screen name="Crash" options={{ title: 'Crash' }}>
+          {(props) => <Crash {...props} tokenCount={tokenCount} setTokenCount={setTokenCount} />}
+        </Stack.Screen>
+        <Stack.Screen name="Keno" options={{ title: 'Keno' }}>
+          {(props) => <Keno {...props} tokenCount={tokenCount} setTokenCount={setTokenCount} />}
         </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>

@@ -98,7 +98,7 @@ const Roulette: React.FC<RouletteProps> = ({ tokenCount, setTokenCount }) => {
             </Animated.View>
 
             <View style={styles.tokenContainer}>
-                <Text style={styles.tokenText}>{`Coins: ${tokenCount}`}</Text>
+                <Text style={styles.tokenText}>Coins: {tokenCount.toFixed(2)}</Text>
             </View>
 
             <TouchableOpacity onPress={spinRoulette} style={[styles.button, !selectedBet && styles.disabledButton]}>
@@ -114,6 +114,8 @@ const Roulette: React.FC<RouletteProps> = ({ tokenCount, setTokenCount }) => {
                 onClose={() => setBetModalVisible(false)}
                 onPlaceBet={handlePlaceBet}
                 onClearBet={handleClearBet}
+                selectedBet={selectedBet}  // Pass selected bet
+                betAmount={betAmount}      // Pass bet amount
             />
 
             {selectedBet !== null && (

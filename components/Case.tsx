@@ -10,9 +10,9 @@ interface CaseProps {
 }
 
 const ITEM_WIDTH = 150;
-const REEL_LENGTH = 20;
+const REEL_LENGTH = 50;
 const CENTER_INDEX = Math.floor(REEL_LENGTH / 2);
-const SPIN_DURATION = 3000;
+const SPIN_DURATION = 4000;
 
 const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) => {
   const [isRolling, setIsRolling] = useState(false);
@@ -40,22 +40,22 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
 
   const getRandomResult = () => {
     const random = Math.random();
-    if (random < 0.5) return '1';  // Grey (50%)
-    if (random < 0.9) return '2';  // Blue (40%)
-    if (random < 0.95) return '3'; // Violet (5%)
-    if (random < 0.98) return '4'; // Pink (3%)
-    if (random < 0.995) return '5'; // Red (1.5%)
-    return '0';  // Gold (0.5%)
+    if (random < 0.375) return 'x0';  // Grey (37.5%)
+    if (random < 0.75) return 'x1';   // Blue (37.5%)
+    if (random < 0.9) return 'x5';    // Violet (15%)
+    if (random < 0.9525) return 'x10'; // Pink (5.25%)
+    if (random < 0.97) return 'x25';   // Red (1.75%)
+    return 'x50';  // Gold (0.5%)
   };
-
+  
   const getPayoutMultiplier = (result: string) => {
     switch (result) {
-      case '1': return 0;   // Grey (50%) - No payout
-      case '2': return 1;   // Blue (40%) - Payout x1
-      case '3': return 5;   // Violet (5%) - Payout x5
-      case '4': return 10;  // Pink (3%) - Payout x10
-      case '5': return 20;  // Red (1.5%) - Payout x20
-      case '0': return 50;  // Gold (0.5%) - Payout x50
+      case 'x0': return 0;   // Grey (37.5%) - No payout
+      case 'x1': return 1;   // Blue (37.5%) - Payout x1
+      case 'x5': return 5;   // Violet (15%) - Payout x5
+      case 'x10': return 10;  // Pink (5.25%) - Payout x10
+      case 'x25': return 25;  // Red (1.75%) - Payout x25
+      case 'x50': return 50;  // Gold (0.5%) - Payout x50
       default: return 1;    // Default case
     }
   };
@@ -67,17 +67,29 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
     setIsRolling(true);
     setResultNumber(null);
     setWinAmount(null); // Reset win amount before each spin
-
     const newReelData = generateReel();
-    setReelData([...newReelData]); // Ensure re-render
+    setReelData(newReelData);
+
+   // const newReelData = generateReel();
+  //  setReelData([...newReelData]); // Ensure re-render
+
+  /* // Ensure resultIndex is within bounds and calculate targetOffset
+  const adjustedIndex = Math.min(Math.max(resultIndex, 0), REEL_LENGTH - 1); // Prevent index out of bounds
+  const targetOffset = -((adjustedIndex - CENTER_INDEX) * ITEM_WIDTH) + ITEM_WIDTH / 2;
+
+  console.log('Result Index:', adjustedIndex);
+  console.log('Target Offset:', targetOffset); */
+
 
     setTimeout(() => {
         const selectedResult = getRandomResult();
         const resultIndex = newReelData.lastIndexOf(selectedResult);
         const targetOffset = -((resultIndex - CENTER_INDEX) * ITEM_WIDTH) + ITEM_WIDTH / 2;
 
-        reelAnim.setValue(ITEM_WIDTH * 5); // Reset the position for animation
-        
+        // Ensure the reel starts from a visible position
+        reelAnim.setValue(0);
+        // reelAnim.setValue(ITEM_WIDTH * 5);
+
         Animated.timing(reelAnim, {
             toValue: targetOffset,
             duration: SPIN_DURATION,
@@ -98,10 +110,8 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
         });
     }, 50); // Small delay to ensure state updates before animation
 
-    // After opening the case, set firstVisit to false
-    setFirstVisit(false);
-};
-
+    setFirstVisit(false); // After opening the case, set firstVisit to false
+}; 
 
   const generateReel = () => {
     return Array.from({ length: REEL_LENGTH }, () => getRandomResult());
@@ -109,12 +119,12 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
 
   const getBoxColor = (value: string) => {
     switch (value) {
-      case '1': return '#BDC3C7';  // Grey
-      case '2': return '#3498db';  // Blue
-      case '3': return '#9B59B6';  // Violet
-      case '4': return '#E91E63';  // Pink
-      case '5': return '#F44336';  // Red
-      case '0': return '#FFD700';  // Golden
+      case 'x0': return '#BDC3C7';  // Grey
+      case 'x1': return '#3498db';  // Blue
+      case 'x5': return '#9B59B6';  // Violet
+      case 'x10': return '#E91E63';  // Pink
+      case 'x25': return '#F44336';  // Red
+      case 'x50': return '#FFD700';  // Golden
       default: return '#3498db';   // Default blue
     }
   };
@@ -122,7 +132,7 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
   return (
     <View style={styles.container}>
       <View style={styles.tokenContainer}>
-        <Text style={styles.tokenText}>{`Coins: ${tokenCount}`}</Text>
+        <Text style={styles.tokenText}>Coins: {tokenCount.toFixed(2)}</Text>
       </View>
 
       {/* If it's the first visit, show the black box with a question mark */}
@@ -149,8 +159,13 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
       <Text style={styles.resultText}>
         {resultNumber ? `Result: ${resultNumber}` : isRolling ? 'Rolling...' : 'Press to Open'}
       </Text>
-      <TouchableOpacity onPress={openCaseAndSpin} style={styles.caseBox} disabled={isRolling}>
-        <Text style={styles.caseText}>Open Case</Text>
+
+      <TouchableOpacity 
+          onPress={openCaseAndSpin} 
+          style={[styles.caseBox, { backgroundColor: isRolling ? '#95a5a6' : '#3498db' }]} 
+          disabled={isRolling}
+        >
+          <Text style={styles.caseText}>Open Case</Text>
       </TouchableOpacity>
 
       <View style={styles.betControls}>
@@ -164,9 +179,11 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
       </View>
 
       {/* You Win Text */}
-      {winAmount !== null && winAmount > 0 && (
-        <Text style={[styles.winText, { position: 'absolute', bottom: 120 }]}>{`You Win: ${winAmount}`}</Text>
-      )}
+        {winAmount !== null && winAmount > 0 && (
+      <Text style={[styles.winText, { position: 'absolute', bottom: 120 }]}>
+        {`You Win: $${winAmount}`}
+      </Text>
+    )}
     </View>
   );
 };
@@ -270,6 +287,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
+    marginBottom: 10,
   },
   questionMark: {
     fontSize: 60,

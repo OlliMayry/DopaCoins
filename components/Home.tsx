@@ -19,12 +19,18 @@ const Home: React.FC<HomeProps> = ({ navigation, tokenCount }) => {
   const handlePlayRoulette = () => {
     navigation.navigate('Roulette');
   };
+  const handlePlayCrash = () => {
+    navigation.navigate('Crash');
+  };
+  const handlePlayKeno = () => {
+    navigation.navigate('Keno');
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>DopaCoins</Text>
       <View style={styles.tokenContainer}>
-      <Text style={styles.tokenText}>{`Coins: ${tokenCount}`}</Text>
+      <Text style={styles.tokenText}>Coins: {tokenCount.toFixed(2)}</Text>
       </View>
       <TouchableOpacity onPress={handlePlayCoinFlip} style={styles.button}>
         <Text style={styles.buttonText}>Coin Flip</Text>
@@ -35,6 +41,12 @@ const Home: React.FC<HomeProps> = ({ navigation, tokenCount }) => {
       </TouchableOpacity>
       <TouchableOpacity onPress={handlePlayRoulette} style={styles.button}>
         <Text style={styles.buttonText}>Roulette</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={handlePlayCrash} style={styles.button}>
+        <Text style={styles.buttonText}>Crash</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={handlePlayKeno} style={styles.button}>
+        <Text style={styles.buttonText}>Keno</Text>
       </TouchableOpacity>
     </View>
   );
