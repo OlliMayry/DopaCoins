@@ -6,5 +6,7 @@ export type RootStackParamList = {
     Roulette: undefined;
     Crash: undefined;
     Keno: undefined;
+    Slot: undefined;
+    Blackjack: undefined;
     // ... other screens
   };

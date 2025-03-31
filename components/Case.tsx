@@ -40,25 +40,47 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
 
   const getRandomResult = () => {
     const random = Math.random();
-    if (random < 0.375) return 'x0';  // Grey (37.5%)
-    if (random < 0.75) return 'x1';   // Blue (37.5%)
-    if (random < 0.9) return 'x5';    // Violet (15%)
-    if (random < 0.9525) return 'x10'; // Pink (5.25%)
-    if (random < 0.97) return 'x25';   // Red (1.75%)
+    if (random < 0.4575) return 'x0';  // Grey (45.75%)
+    if (random < 0.9375) return 'x1';  // Blue (47%)
+    if (random < 0.9875) return 'x3';  // Violet (5%)
+    if (random < 0.9925) return 'x10'; // Pink (1.5%)
+    if (random < 0.9975) return 'x25'; // Red (0.5%)
+    return 'x50';  // Gold (0.25%)
+};
+  
+  const getPayoutMultiplier = (result: string) => {
+    switch (result) {
+      case 'x0': return 0;   // Grey (45.75%) - No payout
+      case 'x1': return 1;   // Blue (47%) - Payout x1
+      case 'x3': return 3;   // Violet (5%) - Payout x3
+      case 'x10': return 10;  // Pink (1.5%) - Payout x10
+      case 'x25': return 25;  // Red (0.5%) - Payout x25
+      case 'x50': return 50;  // Gold (0.25%) - Payout x50
+      default: return 1;    // Default case
+    }
+  };  
+  
+  /*const getRandomResult = () => {
+    const random = Math.random();
+    if (random < 0.455) return 'x0';  // Grey (45.5%)
+    if (random < 0.805) return 'x1';  // Blue (35%)
+    if (random < 0.905) return 'x5';  // Violet (10%)
+    if (random < 0.955) return 'x10'; // Pink (5%)
+    if (random < 0.97) return 'x25';  // Red (1.5%)
     return 'x50';  // Gold (0.5%)
   };
   
   const getPayoutMultiplier = (result: string) => {
     switch (result) {
-      case 'x0': return 0;   // Grey (37.5%) - No payout
-      case 'x1': return 1;   // Blue (37.5%) - Payout x1
-      case 'x5': return 5;   // Violet (15%) - Payout x5
-      case 'x10': return 10;  // Pink (5.25%) - Payout x10
-      case 'x25': return 25;  // Red (1.75%) - Payout x25
+      case 'x0': return 0;   // Grey (45.5%) - No payout
+      case 'x1': return 1;   // Blue (35%) - Payout x1
+      case 'x5': return 5;   // Violet (10%) - Payout x5
+      case 'x10': return 10;  // Pink (5%) - Payout x10
+      case 'x25': return 25;  // Red (1.5%) - Payout x25
       case 'x50': return 50;  // Gold (0.5%) - Payout x50
       default: return 1;    // Default case
     }
-  };
+  };*/
 
   const openCaseAndSpin = () => {
     if (isRolling || tokenCount < betAmount) return;
@@ -70,25 +92,14 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
     const newReelData = generateReel();
     setReelData(newReelData);
 
-   // const newReelData = generateReel();
-  //  setReelData([...newReelData]); // Ensure re-render
-
-  /* // Ensure resultIndex is within bounds and calculate targetOffset
-  const adjustedIndex = Math.min(Math.max(resultIndex, 0), REEL_LENGTH - 1); // Prevent index out of bounds
-  const targetOffset = -((adjustedIndex - CENTER_INDEX) * ITEM_WIDTH) + ITEM_WIDTH / 2;
-
-  console.log('Result Index:', adjustedIndex);
-  console.log('Target Offset:', targetOffset); */
-
-
     setTimeout(() => {
         const selectedResult = getRandomResult();
         const resultIndex = newReelData.lastIndexOf(selectedResult);
-        const targetOffset = -((resultIndex - CENTER_INDEX) * ITEM_WIDTH) + ITEM_WIDTH / 2;
+        const targetOffset = -Math.abs((resultIndex - CENTER_INDEX) * ITEM_WIDTH) + ITEM_WIDTH / 2;
 
         // Ensure the reel starts from a visible position
-        reelAnim.setValue(0);
-        // reelAnim.setValue(ITEM_WIDTH * 5);
+       // reelAnim.setValue(0);
+         reelAnim.setValue(ITEM_WIDTH * 2);
 
         Animated.timing(reelAnim, {
             toValue: targetOffset,
@@ -121,7 +132,7 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
     switch (value) {
       case 'x0': return '#BDC3C7';  // Grey
       case 'x1': return '#3498db';  // Blue
-      case 'x5': return '#9B59B6';  // Violet
+      case 'x3': return '#9B59B6';  // Violet
       case 'x10': return '#E91E63';  // Pink
       case 'x25': return '#F44336';  // Red
       case 'x50': return '#FFD700';  // Golden
@@ -181,7 +192,7 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
       {/* You Win Text */}
         {winAmount !== null && winAmount > 0 && (
       <Text style={[styles.winText, { position: 'absolute', bottom: 120 }]}>
-        {`You Win: $${winAmount}`}
+        {`You Win: ${winAmount}`}
       </Text>
     )}
     </View>

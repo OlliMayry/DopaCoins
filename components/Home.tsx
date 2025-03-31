@@ -25,6 +25,13 @@ const Home: React.FC<HomeProps> = ({ navigation, tokenCount }) => {
   const handlePlayKeno = () => {
     navigation.navigate('Keno');
   };
+  const handlePlayBlackjack = () => {
+    navigation.navigate('Blackjack');
+  };
+  const handlePlaySlot = () => {
+    navigation.navigate('Slot');
+  };
+  
 
   return (
     <View style={styles.container}>
@@ -48,6 +55,13 @@ const Home: React.FC<HomeProps> = ({ navigation, tokenCount }) => {
       <TouchableOpacity onPress={handlePlayKeno} style={styles.button}>
         <Text style={styles.buttonText}>Keno</Text>
       </TouchableOpacity>
+      <TouchableOpacity onPress={handlePlayBlackjack} style={styles.button}>
+        <Text style={styles.buttonText}>Blackjack</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={handlePlaySlot} style={styles.button}>
+        <Text style={styles.buttonText}>Slot Machine</Text>
+      </TouchableOpacity>
+      
     </View>
   );
 };

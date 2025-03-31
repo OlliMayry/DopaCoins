@@ -9,26 +9,26 @@ interface CrashProps {
 // Helper function to generate crash multiplier
 const generateCrashMultiplier = () => {
   const r = Math.random();
-  if (r < 0.35) {
-    // 0-0.99x: 35% chance
+  if (r < 0.4025) {
+    // 0-0.99x: 40.25% chance
     return Math.random() * 0.99;
-  } else if (r < 0.70) {
-    // 1-2.99x: 35% chance
+  } else if (r < 0.7775) {
+    // 1-2.99x: 37.5% chance
     return 1 + Math.random() * (2.99 - 1);
-  } else if (r < 0.90) {
-    // 3-9.99x: 20% chance
+  } else if (r < 0.9275) {
+    // 3-9.99x: 15% chance
     return 3 + Math.random() * (9.99 - 3);
-  } else if (r < 0.975) {
-    // 10-24.99x: 7.5% chance
+  } else if (r < 0.9775) {
+    // 10-24.99x: 5% chance
     return 10 + Math.random() * (24.99 - 10);
   } else if (r < 0.9975) {
-    // 25-49.99x: 2.25% chance
+    // 25-49.99x: 2% chance
     return 25 + Math.random() * (49.99 - 25);
   } else {
-    // 50-1000x: 0.25% chance
-    return 50 + Math.random() * (1000 - 50);
-  }
-};
+    // 50-100x: 0.25% chance
+    return 50 + Math.random() * (100 - 50);
+  } 
+}; //current Rtp is 373%
 
 const Crash: React.FC<CrashProps> = ({ tokenCount, setTokenCount }) => {
   const [isRolling, setIsRolling] = useState(false);
@@ -95,6 +95,8 @@ const Crash: React.FC<CrashProps> = ({ tokenCount, setTokenCount }) => {
       <View style={styles.tokenContainer}>
         <Text style={styles.tokenText}>Coins: {tokenCount.toFixed(2)}</Text>
       </View>
+
+      <Text style={styles.maxMultiplierText}>Max Win 100x</Text>
 
       {isPlaying ? (
         <Text style={styles.rollingText}>Rolling...</Text>
@@ -210,7 +212,7 @@ const styles = StyleSheet.create({
   betControls: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 10,
   },
   betButton: {
     width: 50,
@@ -230,6 +232,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
   },
+  maxMultiplierText: {
+    fontSize: 16,
+    color: '#333', 
+    fontWeight: 'bold',
+    //marginTop: 10,
+    marginBottom: 20,
+  }
 });
 
 export default Crash;
