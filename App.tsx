@@ -10,6 +10,7 @@ import Crash from './components/Crash';
 import Keno from './components/Keno';
 import Slot from './components/Slot';
 import Blackjack from './components/Blackjack';
+import Poker from './components/Poker';
 
 const Stack = createStackNavigator();
 
@@ -42,6 +43,9 @@ const App: React.FC = () => {
         </Stack.Screen>
         <Stack.Screen name="Blackjack" options={{ title: 'Blackjack' }}>
           {(props) => <Blackjack {...props} tokenCount={tokenCount} setTokenCount={setTokenCount} />}
+        </Stack.Screen>
+        <Stack.Screen name="Poker" options={{ title: 'Poker' }}>
+          {(props) => <Poker {...props} tokenCount={tokenCount} setTokenCount={setTokenCount} />}
         </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>

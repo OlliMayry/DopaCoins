@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, Image } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from './types';
 
@@ -13,6 +13,12 @@ const ITEM_WIDTH = 150;
 const REEL_LENGTH = 50;
 const CENTER_INDEX = Math.floor(REEL_LENGTH / 2);
 const SPIN_DURATION = 4000;
+
+const caseImages: { [key: string]: any } = {
+ // Knife image
+ "50x": require("../assets/Cases/Knife.png"),
+ "1x": require("../assets/Cases/RK.png"),
+}
 
 const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) => {
   const [isRolling, setIsRolling] = useState(false);
@@ -58,7 +64,7 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
       case 'x50': return 50;  // Gold (0.25%) - Payout x50
       default: return 1;    // Default case
     }
-  };  
+  };  //RTP 102%
   
   /*const getRandomResult = () => {
     const random = Math.random();
@@ -133,9 +139,9 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
       case 'x0': return '#BDC3C7';  // Grey
       case 'x1': return '#3498db';  // Blue
       case 'x3': return '#9B59B6';  // Violet
-      case 'x10': return '#E91E63';  // Pink
+      case 'x10': return '#FF00BF';  // Pink
       case 'x25': return '#F44336';  // Red
-      case 'x50': return '#FFD700';  // Golden
+      case 'x50': return;  // Golden
       default: return '#3498db';   // Default blue
     }
   };
@@ -155,12 +161,18 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
         <View style={styles.reelWrapper}>
           <Animated.View style={[styles.reel, { transform: [{ translateX: reelAnim }] }]}>
             {reelData.map((value, index) => (
-              <View
-                style={[styles.box, { backgroundColor: getBoxColor(value) }]}
-                key={index}
-              >
-                <Text style={styles.boxText}>{value}</Text>
-              </View>
+             <View
+             style={[styles.box, { backgroundColor: getBoxColor(value) }]}
+             key={index}
+           >
+             {value === 'x50' ? (
+               <Image source={caseImages['50x']} style={styles.image} />
+              ) : value === 'x1' ? (
+                <Image source={caseImages['1x']} style={styles.image} />
+              ) : (
+               <Text style={styles.boxText}>{value}</Text>
+             )}
+           </View>
             ))}
           </Animated.View>
         </View>
@@ -242,6 +254,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 5,
+    borderRadius: 10,
   },
   boxText: {
     fontSize: 24,
@@ -304,6 +317,12 @@ const styles = StyleSheet.create({
     fontSize: 60,
     color: 'white',
     fontWeight: 'bold',
+  },
+  image: {
+    width: 150,  // Adjust size as needed
+    height: 150,
+    resizeMode: 'contain',
+    borderRadius: 10,
   },
 });
 

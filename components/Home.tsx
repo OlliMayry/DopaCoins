@@ -31,6 +31,9 @@ const Home: React.FC<HomeProps> = ({ navigation, tokenCount }) => {
   const handlePlaySlot = () => {
     navigation.navigate('Slot');
   };
+  const handlePlayPoker = () => {
+    navigation.navigate('Poker');
+  };
   
 
   return (
@@ -61,7 +64,9 @@ const Home: React.FC<HomeProps> = ({ navigation, tokenCount }) => {
       <TouchableOpacity onPress={handlePlaySlot} style={styles.button}>
         <Text style={styles.buttonText}>Slot Machine</Text>
       </TouchableOpacity>
-      
+      <TouchableOpacity onPress={handlePlayPoker} style={styles.button}>
+        <Text style={styles.buttonText}>Poker</Text>
+      </TouchableOpacity>
     </View>
   );
 };
