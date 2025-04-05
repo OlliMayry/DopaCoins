@@ -91,9 +91,7 @@ const suits = ["Clubs", "Diamonds", "Hearts", "Spades"];
 const ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 const deck = suits.flatMap((suit) => ranks.map((rank) => `${suit}-${rank}`));
 
-
 type Hand = string[];
-
 
 const Poker: React.FC<PokerProps> = ({ navigation, tokenCount, setTokenCount }) => {
     const [betAmount, setBetAmount] = useState(1);
@@ -218,6 +216,7 @@ const Poker: React.FC<PokerProps> = ({ navigation, tokenCount, setTokenCount }) 
         return newHand;
     });
   };
+
 // Starts doubling mode by dealing a new 5-card hand.
 const handleDoublePress = () => {
   setIsDoubling(true);
@@ -245,34 +244,50 @@ const handleCashOut = () => {
   setHandType("");
   setDealDisabled(false);
 };
+
+const getDoubleRankValue = (card: string) => {
+  const rank = card.split("-")[1];
+  if (rank === "A") return 1;
+  return handRanks[rank] ?? parseInt(rank, 10);
+};
 // When a card is selected during doubling.
 const handleDoubleCardSelection = (selectedIndex: number) => {
-  // Reveal the selected card immediately.
   setSelectedDoubleIndex(selectedIndex);
-  // Capture the current pending win value.
   const currentWin = winAmount;
   // After 0.5 sec, reveal all cards and check the result.
   setTimeout(() => {
     setRevealedAll(true);
     const baseCard = doubleCards[0];
     const chosenCard = doubleCards[selectedIndex];
-    if (getRankValue(chosenCard) > getRankValue(baseCard)) {
-      // Doubling success: update pending win.
+    const baseValue = getDoubleRankValue(baseCard);
+    const chosenValue = getDoubleRankValue(chosenCard);
+
+    if (chosenValue > baseValue) {
+      // Onnistui
       const newWin = currentWin * 2;
       setWinAmount(newWin);
       setHandType("Double Success!");
-      // In success, we remain in doubling mode, letting the user choose when to Cash Out.
-    } else {
-      // Doubling failure: pending win becomes 0.
-      setWinAmount(0);
-      setHandType("Double Lost!");
-      // After 0.5 sec, automatically exit doubling mode (returning to normal view).
+    } else if (chosenValue === baseValue) {
+      // Sama arvo -> puolet takaisin
+      const refund = currentWin / 2;
+      setWinAmount(0); // Voitto ei jää voimaan enää
+      setTokenCount((prev) => prev + refund);
+      setHandType("Same Rank! Half Returned.");
       setTimeout(() => {
         setIsDoubling(false);
         setDoubleCards([]);
         setSelectedDoubleIndex(null);
         setRevealedAll(false);
-        // No token update here because win is 0.
+      }, 1000);
+    } else {
+      // Häviö
+      setWinAmount(0);
+      setHandType("Double Lost!");
+      setTimeout(() => {
+        setIsDoubling(false);
+        setDoubleCards([]);
+        setSelectedDoubleIndex(null);
+        setRevealedAll(false);
       }, 1000);
     }
   }, 500);
@@ -288,44 +303,44 @@ const handleDoubleCardSelection = (selectedIndex: number) => {
     
           {/* Show either the doubling view or the normal game */}
           {isDoubling ? (
-  <View style={styles.doubleContainer}>
-    <Text style={styles.instructionText}>
-  {revealedAll
-    ? winAmount > 0
-      ? `Current win: ${winAmount.toFixed(2)} coins` // If winAmount > 0, display current win
-      : handType // If winAmount is 0 (failure), display the hand type (e.g., "Double Fail!")
-    : `You win ${(winAmount * 2).toFixed(2)} coins if you find a card of higher value` // If still in selecting phase, show instruction
-  }
-</Text>
-    <View style={styles.rowContainer}>
-      {/* Always show the base card face-up */}
-      <Image source={cardImages[doubleCards[0]]} style={styles.cardImage} />
-      {/* Render the 4 selectable cards */}
-      {doubleCards.slice(1).map((card, idx) => {
-        const cardIndex = idx + 1; // Adjust for base card.
-        let cardSource = cardImages["Card-Back"];
-        // Reveal the card if it was selected or if all cards are revealed.
-        if (revealedAll || selectedDoubleIndex === cardIndex) {
-          cardSource = cardImages[doubleCards[cardIndex]];
+      <View style={styles.doubleContainer}>
+          <Text style={styles.instructionText}>
+        {revealedAll
+          ? winAmount > 0
+            ? `Current win: ${winAmount.toFixed(2)} coins` // If winAmount > 0, display current win
+            : handType // If winAmount is 0 (failure), display the hand type (e.g., "Double Fail!")
+          : `You win ${(winAmount * 2).toFixed(2)} coins if you find a card of higher value` // If still in selecting phase, show instruction
         }
-        return (
-          <TouchableOpacity
-            key={idx}
-            onPress={() => {
-              if (selectedDoubleIndex === null) {
-                handleDoubleCardSelection(cardIndex);
+          </Text>
+          <View style={styles.rowContainer}>
+            {/* Always show the base card face-up */}
+            <Image source={cardImages[doubleCards[0]]} style={styles.cardImage} />
+            {/* Render the 4 selectable cards */}
+            {doubleCards.slice(1).map((card, idx) => {
+              const cardIndex = idx + 1; // Adjust for base card.
+              let cardSource = cardImages["Card-Back"];
+              // Reveal the card if it was selected or if all cards are revealed.
+              if (revealedAll || selectedDoubleIndex === cardIndex) {
+                cardSource = cardImages[doubleCards[cardIndex]];
               }
-            }}
-            disabled={selectedDoubleIndex !== null}
-          >
-            <Image source={cardSource} style={styles.cardImage} />
-          </TouchableOpacity>
-        );
-      })}
-    </View>
-    {/* After result is revealed, if win > 0, show both Double and Cash Out buttons */}
-    {revealedAll && (
-      winAmount > 0 ? (
+              return (
+                <TouchableOpacity
+                  key={idx}
+                  onPress={() => {
+                    if (selectedDoubleIndex === null) {
+                      handleDoubleCardSelection(cardIndex);
+                    }
+                  }}
+                  disabled={selectedDoubleIndex !== null}
+                >
+                  <Image source={cardSource} style={styles.cardImage} />
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        {/* After result is revealed, if win > 0, show both Double and Cash Out buttons */}
+        {revealedAll && (
+        winAmount > 0 ? (
         <View style={styles.doubleOptions}>
           <TouchableOpacity
             onPress={handleDoublePress}
@@ -346,7 +361,7 @@ const handleDoubleCardSelection = (selectedIndex: number) => {
       )
     )}
   </View>
-) : (
+          ) : (
             <>
               {/* Normal game cards */}
               <View style={styles.cardContainer}>
@@ -594,7 +609,7 @@ const handleDoubleCardSelection = (selectedIndex: number) => {
     instructionText: {
       fontSize: 18,
       color: '#fff',
-      marginBottom: 10,
+     // marginBottom: 10,
     },
   });
  
