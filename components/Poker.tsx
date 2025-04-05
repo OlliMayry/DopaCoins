@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, Image, TouchableOpacity, Text, StyleSheet, ImageBackground } from "react-native";
+import React, { useState, useRef, useEffect } from "react";
+import { View, Image, TouchableOpacity, Text, StyleSheet, ImageBackground, Animated } from "react-native";
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from './types';
 
@@ -25,6 +25,7 @@ const cardImages: { [key: string]: any } = {
   "Clubs-Q": require("../assets/Cards/Clubs/Q.png"),
   "Clubs-K": require("../assets/Cards/Clubs/K.png"),
 
+
   // Ruudut (Diamonds)
   "Diamonds-A": require("../assets/Cards/Diamonds/A.png"),
   "Diamonds-2": require("../assets/Cards/Diamonds/2.png"),
@@ -39,6 +40,7 @@ const cardImages: { [key: string]: any } = {
   "Diamonds-J": require("../assets/Cards/Diamonds/J.png"),
   "Diamonds-Q": require("../assets/Cards/Diamonds/Q.png"),
   "Diamonds-K": require("../assets/Cards/Diamonds/K.png"),
+
 
   // Hertat (Hearts)
   "Hearts-A": require("../assets/Cards/Hearts/A.png"),
@@ -55,6 +57,7 @@ const cardImages: { [key: string]: any } = {
   "Hearts-Q": require("../assets/Cards/Hearts/Q.png"),
   "Hearts-K": require("../assets/Cards/Hearts/K.png"),
 
+
   // Padat (Spades)
   "Spades-A": require("../assets/Cards/Spades/A.png"),
   "Spades-2": require("../assets/Cards/Spades/2.png"),
@@ -70,6 +73,7 @@ const cardImages: { [key: string]: any } = {
   "Spades-Q": require("../assets/Cards/Spades/Q.png"),
   "Spades-K": require("../assets/Cards/Spades/K.png"),
 
+
   // Kortin selkäpuoli
   "Card-Back": require("../assets/Cards/Card around.png"),
   // Korttipakan selkäpuoli
@@ -82,153 +86,366 @@ const cardImages: { [key: string]: any } = {
   "Background": require("../assets/Poker background.png"),
 };
 
+
 const suits = ["Clubs", "Diamonds", "Hearts", "Spades"];
 const ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 const deck = suits.flatMap((suit) => ranks.map((rank) => `${suit}-${rank}`));
 
+
 type Hand = string[];
+
 
 const Poker: React.FC<PokerProps> = ({ navigation, tokenCount, setTokenCount }) => {
     const [betAmount, setBetAmount] = useState(1);
     const [cards, setCards] = useState<any[]>([]);  // Pelissä jaetut kortit
-    const [deck1, setDeck1] = useState(Object.keys(cardImages).filter(card => !card.includes('Deck-Back')));
+   // const [deck1, setDeck1] = useState(Object.keys(cardImages).filter(card => !card.includes('Deck-Back')));
     const [deck, setDeck] = useState(() => suits.flatMap(suit => ranks.map(rank => `${suit}-${rank}`)));
-  
+    const [openedStack, setOpenedStack] = useState<string[]>([]);
     const [dealDisabled, setDealDisabled] = useState(false);
+  //  const [betlDisabled, setBetDisabled] = useState(false)
     const [winAmount, setWinAmount] = useState(0);
-    
-  
+    const [handType, setHandType] = useState("");
+    const [isDoubling, setIsDoubling] = useState(false);
+    const [doubleCards, setDoubleCards] = useState<string[]>([]);
+    const [selectedDoubleIndex, setSelectedDoubleIndex] = useState<number | null>(null);
+    const [revealedAll, setRevealedAll] = useState(false);
+ 
     const handRanks: Record<string, number> = { "A": 14, "K": 13, "Q": 12, "J": 11 };
-    
+   
     const getRankValue = (card: string) => {
+      if (!card || typeof card !== 'string' || !card.includes("-")) {
+        console.error("Invalid card:", card);  // Log the invalid card for debugging
+        return 0; // Default value when the card is not a valid string
+      }
       const rank = card.split("-")[1];
       return handRanks[rank] ?? parseInt(rank, 10);
-  };
+    };
 
-    const calculateWin = (hand: string[]) => {
-        const counts: { [key: string]: number } = {};
-        const suits: { [key: string]: number } = {};
-        let rankValues = hand.map(getRankValue).sort((a, b) => a - b);
+  const openedStackAnim = useRef(new Animated.Value(-50)).current;
 
-        hand.forEach(card => {
-            const [suit, rank] = card.split("-");
-            counts[rank] = (counts[rank] || 0) + 1;
-            suits[suit] = (suits[suit] || 0) + 1;
-        });
+  useEffect(() => {
+    Animated.timing(openedStackAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [openedStack]);
 
-        const hasFlush = Object.values(suits).some(count => count === 5);
-        const hasStraight = rankValues.every((val, idx, arr) => idx === 0 || val === arr[idx - 1] + 1);
 
-        // Tarkistetaan, onko jokin pari (10, J, Q, K, A)
+  const calculateWin = (hand: string[]) => {
+    const counts: { [key: string]: number } = {};
+    const suits: { [key: string]: number } = {};
+    let rankValues = hand.map(getRankValue).sort((a, b) => a - b);
+
+    hand.forEach(card => {
+        const [suit, rank] = card.split("-");
+        counts[rank] = (counts[rank] || 0) + 1;
+        suits[suit] = (suits[suit] || 0) + 1;
+    });
+
+    const hasFlush = Object.values(suits).some(count => count === 5);
+    const hasStraight = rankValues.every((val, idx, arr) => idx === 0 || val === arr[idx - 1] + 1);
+
+    // Tarkistetaan, onko jokin pari (10, J, Q, K, A)
     const pairs = ["10", "J", "Q", "K", "A"];
     const hasPair = pairs.some(rank => counts[rank] === 2);
-        
-        if (hasFlush && hasStraight && rankValues.includes(14)) return 100;
-        if (hasFlush && hasStraight) return 75;
-        if (Object.values(counts).includes(4)) return 50;
-        if (Object.values(counts).includes(3) && Object.values(counts).includes(2)) return 20;
-        if (hasFlush) return 15;
-        if (hasStraight) return 11;
-        if (Object.values(counts).includes(3)) return 5;
-        if (Object.values(counts).filter(x => x === 2).length === 2) return 3;
-        // Jos kädessä on pari 10, J, Q, K tai A, palautetaan 2x voitto
-        if (hasPair) return 2;
-        return 0;
-    };
+    //const hasTenA = counts["10"] === 1 && counts["A"] === 1; // Tarkistetaan onko 10-A pari
+
+    if (hasFlush && hasStraight && rankValues.includes(14)) return { winAmount: 100, handType: "Royal Flush" }; 
+    if (hasFlush && hasStraight) return { winAmount: 75, handType: "Straight Flush" }; 
+    if (Object.values(counts).includes(4)) return { winAmount: 50, handType: "Four of a Kind" }; 
+    if (Object.values(counts).includes(3) && Object.values(counts).includes(2)) return { winAmount: 20, handType: "Full House" }; 
+    if (hasFlush) return { winAmount: 15, handType: "Flush" }; 
+    if (hasStraight) return { winAmount: 11, handType: "Straight" }; 
+    if (Object.values(counts).includes(3)) return { winAmount: 5, handType: "Three of a Kind" }; 
+    if (Object.values(counts).filter(x => x === 2).length === 2) return { winAmount: 3, handType: "Two Pair" }; 
+    if (hasPair) return { winAmount: 2, handType: "10-A Pair" }; 
+
+    return { winAmount: 0, handType: "No Win" }; // Ei voittanut mitään
+};
+
 
     const dealCards = () => {
       if (tokenCount < betAmount) return;
-      
+     
       setTokenCount(prev => prev - betAmount);
       setDealDisabled(true);
       setWinAmount(0);
-  
+
+      //setOpenedStack([]);  Tyhjennä avattu pino ennen uutta jakoa
+
+      // Resetoi animaatio alkuasentoon (piiloon)
+      openedStackAnim.setValue(-50);
+ 
       // Luo uusi ja sekoitettu pakka aina ennen jakamista
       const shuffledDeck = suits.flatMap((suit) => ranks.map((rank) => `${suit}-${rank}`)).sort(() => Math.random() - 0.5);
-      
+     
       // Otetaan kortteja varmistaen, ettei `undefined` pääse mukaan
-      const drawCard = () => shuffledDeck.pop() || "Placeholder-Card"; 
-  
+      const drawCard = () => shuffledDeck.pop() || "Invalid-Card";  // Default to a placeholder if the card is undefined
+ 
       const dealtCards = [
           drawCard(),  // Ensimmäinen kortti pelaajalle
           drawCard(),  // Toinen kortti pelaajalle
           ["Double-Back", drawCard(), drawCard(), drawCard()], // Pino 1
           ["Double-Back", drawCard(), drawCard(), drawCard()]  // Pino 2
       ];
-  
+ 
       setDeck(shuffledDeck); // Päivitetään pakka jäljelle jääneillä korteilla
       setCards(dealtCards);
   };
-  
-  
-    // Korttipakan valinta
-    const selectStack = (index: number) => {
-        setCards(prevCards => {
-          const newHand = [...prevCards];
-          const selectedStack = newHand[index];
-    
-          if (Array.isArray(selectedStack)) {
+ 
+   // Korttipakan valinta
+   const selectStack = (index: number) => {
+    setCards(prevCards => {
+        const newHand = [...prevCards];
+        const selectedStack = newHand[index];
+
+        if (Array.isArray(selectedStack)) {
             newHand.splice(index, 1, ...selectedStack.slice(1));
             const otherIndex = newHand.findIndex(stack => Array.isArray(stack));
             if (otherIndex !== -1) newHand.splice(otherIndex, 1);
         }
 
-        const winMultiplier = calculateWin(newHand);
-        if (winMultiplier > 0) {
-            setWinAmount(betAmount * winMultiplier);
-            setTokenCount(prev => prev + betAmount * winMultiplier);
+        const { winAmount, handType } = calculateWin(newHand); // Lasketaan voitto ja käden tyyppi
+        if (winAmount > 0) {
+           /* setWinAmount(betAmount * winAmount); // Asetetaan voitto
+            setTokenCount(prev => prev + betAmount * winAmount); // Päivitetään tokenit
+            setHandType(handType); // Asetetaan käden tyyppi */
+            setWinAmount(betAmount * winAmount);
+      setHandType(handType);
         }
-
         setDealDisabled(false);
         return newHand;
     });
+  };
+// Starts doubling mode by dealing a new 5-card hand.
+const handleDoublePress = () => {
+  setIsDoubling(true);
+  setSelectedDoubleIndex(null);
+  setRevealedAll(false);
+  // winAmount remains pending from the normal win.
+  const newDeck = suits
+    .flatMap((suit) => ranks.map((rank) => `${suit}-${rank}`))
+    .sort(() => Math.random() - 0.5);
+  const drawCard = () => newDeck.pop() || "Invalid-Card";
+  const newDoubleCards = [drawCard(), drawCard(), drawCard(), drawCard(), drawCard()];
+  setDoubleCards(newDoubleCards);
 };
-  
+
+// When Cash Out is pressed, the pending win is added.
+const handleCashOut = () => {
+  // Only add win if there is a win pending (winAmount > 0)
+  setTokenCount((prev) => prev + winAmount);
+  // Reset doubling state.
+  setIsDoubling(false);
+  setDoubleCards([]);
+  setSelectedDoubleIndex(null);
+  setRevealedAll(false);
+  setWinAmount(0);
+  setHandType("");
+  setDealDisabled(false);
+};
+// When a card is selected during doubling.
+const handleDoubleCardSelection = (selectedIndex: number) => {
+  // Reveal the selected card immediately.
+  setSelectedDoubleIndex(selectedIndex);
+  // Capture the current pending win value.
+  const currentWin = winAmount;
+  // After 0.5 sec, reveal all cards and check the result.
+  setTimeout(() => {
+    setRevealedAll(true);
+    const baseCard = doubleCards[0];
+    const chosenCard = doubleCards[selectedIndex];
+    if (getRankValue(chosenCard) > getRankValue(baseCard)) {
+      // Doubling success: update pending win.
+      const newWin = currentWin * 2;
+      setWinAmount(newWin);
+      setHandType("Double Success!");
+      // In success, we remain in doubling mode, letting the user choose when to Cash Out.
+    } else {
+      // Doubling failure: pending win becomes 0.
+      setWinAmount(0);
+      setHandType("Double Lost!");
+      // After 0.5 sec, automatically exit doubling mode (returning to normal view).
+      setTimeout(() => {
+        setIsDoubling(false);
+        setDoubleCards([]);
+        setSelectedDoubleIndex(null);
+        setRevealedAll(false);
+        // No token update here because win is 0.
+      }, 1000);
+    }
+  }, 500);
+};
+   
     return (
       <ImageBackground source={cardImages["Background"]} style={styles.background}>
         <View style={styles.container}>
-        <Image source={cardImages['Deck-Back']} style={styles.deckBack} />
-        <View style={styles.tokenContainer}>
-          <Text style={styles.tokenText}>Coins: {tokenCount.toFixed(2)}</Text>
+          <Image source={cardImages["Deck-Back"]} style={styles.deckBack} />
+          <View style={styles.tokenContainer}>
+            <Text style={styles.tokenText}>Coins: {tokenCount.toFixed(2)}</Text>
+          </View>
+    
+          {/* Show either the doubling view or the normal game */}
+          {isDoubling ? (
+  <View style={styles.doubleContainer}>
+    <Text style={styles.instructionText}>
+  {revealedAll
+    ? winAmount > 0
+      ? `Current win: ${winAmount.toFixed(2)} coins` // If winAmount > 0, display current win
+      : handType // If winAmount is 0 (failure), display the hand type (e.g., "Double Fail!")
+    : `You win ${(winAmount * 2).toFixed(2)} coins if you find a card of higher value` // If still in selecting phase, show instruction
+  }
+</Text>
+    <View style={styles.rowContainer}>
+      {/* Always show the base card face-up */}
+      <Image source={cardImages[doubleCards[0]]} style={styles.cardImage} />
+      {/* Render the 4 selectable cards */}
+      {doubleCards.slice(1).map((card, idx) => {
+        const cardIndex = idx + 1; // Adjust for base card.
+        let cardSource = cardImages["Card-Back"];
+        // Reveal the card if it was selected or if all cards are revealed.
+        if (revealedAll || selectedDoubleIndex === cardIndex) {
+          cardSource = cardImages[doubleCards[cardIndex]];
+        }
+        return (
+          <TouchableOpacity
+            key={idx}
+            onPress={() => {
+              if (selectedDoubleIndex === null) {
+                handleDoubleCardSelection(cardIndex);
+              }
+            }}
+            disabled={selectedDoubleIndex !== null}
+          >
+            <Image source={cardSource} style={styles.cardImage} />
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+    {/* After result is revealed, if win > 0, show both Double and Cash Out buttons */}
+    {revealedAll && (
+      winAmount > 0 ? (
+        <View style={styles.doubleOptions}>
+          <TouchableOpacity
+            onPress={handleDoublePress}
+            style={[styles.button, styles.doubleButton]}
+          >
+            <Text style={styles.buttonText}>Double</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleCashOut}
+            style={[styles.button, styles.cashOutButton]}
+          >
+            <Text style={styles.buttonText}>Cash Out</Text>
+          </TouchableOpacity>
         </View>
-
-  {/* Korttipakan esittäminen */}
-        <View style={styles.cardContainer}>
-          {cards.map((card, index) => (
-            Array.isArray(card) ? (
-              <View key={index} style={styles.stackContainer}>
-                {/* Näytetään "Double-Back" kortit pinossa */}
-                <TouchableOpacity onPress={() => selectStack(index)}>
-                  <Image source={cardImages[card[0]]} style={styles.cardImage} />
-                  <Image source={cardImages[card[1]]} style={[styles.cardImage, styles.overlayCard]} />
+      ) : (
+        // In case of failure, the game exits doubling mode automatically.
+        null
+      )
+    )}
+  </View>
+) : (
+            <>
+              {/* Normal game cards */}
+              <View style={styles.cardContainer}>
+                <View style={styles.rowContainer}>
+                  {cards.map((card, index) =>
+                    Array.isArray(card) ? (
+                      <View key={index} style={styles.stackContainer}>
+                        <TouchableOpacity onPress={() => selectStack(index)}>
+                          <Image
+                            source={cardImages[card[0]]}
+                            style={styles.cardImage}
+                          />
+                          <Image
+                            source={cardImages[card[1]]}
+                            style={[styles.cardImage, styles.overlayCard]}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <Image
+                        key={index}
+                        source={cardImages[card]}
+                        style={styles.cardImage}
+                      />
+                    )
+                  )}
+                </View>
+              </View>
+    
+              {winAmount > 0 && handType ? (
+                <>
+                  <Text style={styles.handText}>{handType}</Text>
+                  <Text style={styles.winText}>Win: {winAmount}</Text>
+                </>
+              ) : null}
+    
+            {/* Doubling options if there's a pending win */}
+            {winAmount > 0 && (
+                <View style={styles.doubleOptions}>
+                  <TouchableOpacity
+                    onPress={handleDoublePress}
+                    style={[styles.button, styles.doubleButton]}
+                  >
+                    <Text style={styles.buttonText}>Double</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleCashOut}
+                    style={[styles.button, styles.cashOutButton]}
+                  >
+                    <Text style={styles.buttonText}>Cash Out</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+    
+              {/* Deal button */}
+              <TouchableOpacity
+                onPress={dealCards}
+                style={[
+                  styles.button,
+                  dealDisabled && styles.buttonDisabled,
+                  cards.length === 0 ? styles.dealButtonInitial : styles.dealButtonAfter,
+                ]}
+                disabled={dealDisabled}
+              >
+                <Text style={styles.buttonText}>Deal</Text>
+              </TouchableOpacity>
+    
+              {/* Bet control */}
+              <View
+                style={[
+                  styles.betControls,
+                  cards.length === 0 ? styles.betControlsInitial : styles.betControlsAfter,
+                ]}
+              >
+                <TouchableOpacity
+                  onPress={() => setBetAmount((prev) => Math.max(1, prev - 1))}
+                  style={[styles.betButton, dealDisabled && styles.buttonDisabled]}
+                  disabled={dealDisabled}
+                >
+                  <Text style={styles.betText}>-</Text>
+                </TouchableOpacity>
+    
+                <Text style={styles.betAmount}>Bet: {betAmount}</Text>
+    
+                <TouchableOpacity
+                  onPress={() => setBetAmount((prev) => prev + 1)}
+                  style={[styles.betButton, dealDisabled && styles.buttonDisabled]}
+                  disabled={dealDisabled}
+                >
+                  <Text style={styles.betText}>+</Text>
                 </TouchableOpacity>
               </View>
-            ) : (
-              <Image key={index} source={cardImages[card]} style={styles.cardImage} />
-            )
-          ))}
+            </>
+          )}
         </View>
-        
-        {winAmount > 0 && <Text style={styles.winText}>Win: {winAmount}</Text>}
-           {/* Korttien jakopainike */}
-           <TouchableOpacity onPress={dealCards} style={[styles.button, dealDisabled && styles.buttonDisabled]} disabled={dealDisabled}>
-                <Text style={styles.buttonText}>Deal</Text>
-            </TouchableOpacity>
-        {/* Pelipanoksen säätö */}
-        <View style={styles.betControls}>
-          <TouchableOpacity onPress={() => setBetAmount((prev) => Math.max(1, prev - 1))} style={styles.betButton}>
-            <Text style={styles.betText}>-</Text>
-          </TouchableOpacity>
-          <Text style={styles.betAmount}>Bet: {betAmount}</Text>
-          <TouchableOpacity onPress={() => setBetAmount((prev) => prev + 1)} style={styles.betButton}>
-            <Text style={styles.betText}>+</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
       </ImageBackground>
     );
-  };
-  
+  };    
+ 
   const styles = StyleSheet.create({
     background: {
       flex: 1,
@@ -254,7 +471,7 @@ const Poker: React.FC<PokerProps> = ({ navigation, tokenCount, setTokenCount }) 
       backgroundColor: '#007bff',
       padding: 15,
       borderRadius: 10,
-      marginTop: 180,
+      marginTop: 160,
     },
     buttonText: {
       color: "white",
@@ -269,9 +486,10 @@ const Poker: React.FC<PokerProps> = ({ navigation, tokenCount, setTokenCount }) 
      // marginBottom: 200,
     },
     cardImage: {
+      marginTop: 30,
       width: 60,
       height: 90,
-      margin: 5,
+      marginHorizontal: 2.5,
     },
     betControls: {
       flexDirection: 'row',
@@ -312,20 +530,72 @@ const Poker: React.FC<PokerProps> = ({ navigation, tokenCount, setTokenCount }) 
       top: 7.5,
       left: 3.5,
     },
-    buttonDisabled: { 
-      backgroundColor: "#888" 
+    buttonDisabled: {
+      backgroundColor: "#888"
     },
-    winText: { 
+    winText: {
       fontSize: 20,
       color: '#0FFF50',
       fontWeight: 'bold',
       position: 'absolute',
       top: 360,  // Sijoittaa voittotekstin yläreunaan
-      left: '50%', // Asettaa sen keskelle vaakasuunnassa
+      justifyContent: 'center',
       //transform: [{ translateX: -50 }], // Keskittää tekstin täsmälleen
       zIndex: 10, // Varmistaa, että voittoteksti tulee muiden päälle, jos tarve
       //marginTop: 25,
     },
+    handText: {
+      fontSize: 20,
+      color: '#0FFF50',
+      fontWeight: 'bold',
+      position: 'absolute',
+      top: 330,  // Sijoittaa voittotekstin yläreunaan
+     // left: '50%', // Asettaa sen keskelle vaakasuunnassa
+     // zIndex: 10, // Varmistaa, että voittoteksti tulee muiden päälle, jos tarve
+     justifyContent: 'center',
+    },
+    rowContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      marginVertical: 5, // Lisää tilaa rivien väliin
+    },
+    dealButtonInitial: {
+      marginTop: 280,  // Sijoittaa "Deal"-napin alkuun
+    },
+    dealButtonAfter: {
+      marginTop: 160,  // Sijoittaa "Deal"-napin normaalisti
+    },
+    betControlsInitial: {
+      marginTop: 20,  // Sijoittaa "Bet"-osio alkuun
+    },
+    betControlsAfter: {
+      marginTop: 20,  // Sijoittaa "Bet"-osio normaalisti
+    },
+    doubleOptions: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      width: '80%',
+      marginTop: 20,
+    },
+    doubleButton: {
+      backgroundColor: '#f39c12',
+      flex: 1,
+      marginRight: 10,
+    },
+    cashOutButton: {
+      backgroundColor: '#27ae60',
+      flex: 1,
+      marginLeft: 10,
+    },
+    doubleContainer: {
+      alignItems: 'center',
+      marginTop: 120,
+    },
+    instructionText: {
+      fontSize: 18,
+      color: '#fff',
+      marginBottom: 10,
+    },
   });
-  
+ 
   export default Poker;

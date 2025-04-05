@@ -4,12 +4,12 @@ import { Modal, View, Text, TouchableOpacity, TextInput, StyleSheet } from 'reac
 interface BetModalProps {
     isVisible: boolean;
     onClose: () => void;
-    onPlaceBet: (color: 'Blue' | 'Red' | 'Standing', amount: number) => void;
+    onPlaceBet: (color: 'Heads' | 'Tails' | 'Edge', amount: number) => void;
     onClearBet: () => void; // Add this prop
 }
 
 const BetModal: React.FC<BetModalProps> = ({ isVisible, onClose, onPlaceBet, onClearBet }) => {
-    const [selectedColor, setSelectedColor] = useState<'Blue' | 'Red' | 'Standing'>('Blue');
+    const [selectedColor, setSelectedColor] = useState<'Heads' | 'Tails' | 'Edge'>('Heads');
     const [betAmount, setBetAmount] = useState('');
 
     const handlePlaceBet = () => {
@@ -25,7 +25,7 @@ const BetModal: React.FC<BetModalProps> = ({ isVisible, onClose, onPlaceBet, onC
     };
 
     const handleClearBet = () => {
-        setSelectedColor('Blue'); // Reset to default color or any initial value
+        setSelectedColor('Heads'); // Reset to default color or any initial value
         setBetAmount(''); // Clear the bet amount
         onClearBet(); // Notify the parent component to clear the bet
     };
@@ -37,22 +37,22 @@ const BetModal: React.FC<BetModalProps> = ({ isVisible, onClose, onPlaceBet, onC
                     <Text style={styles.modalTitle}>Place Your Bet</Text>
                     <View style={styles.colorPicker}>
                         <TouchableOpacity
-                            style={[styles.colorButton, { backgroundColor: selectedColor === 'Blue' ? '#3498db' : '#fff' }]}
-                            onPress={() => setSelectedColor('Blue')}
+                            style={[styles.colorButton, { backgroundColor: selectedColor === 'Heads' ? '#3498db' : '#fff' }]}
+                            onPress={() => setSelectedColor('Heads')}
                         >
-                            <Text style={{ color: selectedColor === 'Blue' ? '#fff' : '#3498db' }}>Blue</Text>
+                            <Text style={{ color: selectedColor === 'Heads' ? '#fff' : '#3498db' }}>Heads</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={[styles.colorButton, { backgroundColor: selectedColor === 'Red' ? '#e74c3c' : '#fff' }]}
-                            onPress={() => setSelectedColor('Red')}
+                            style={[styles.colorButton, { backgroundColor: selectedColor === 'Tails' ? '#e74c3c' : '#fff' }]}
+                            onPress={() => setSelectedColor('Tails')}
                         >
-                            <Text style={{ color: selectedColor === 'Red' ? '#fff' : '#e74c3c' }}>Red</Text>
+                            <Text style={{ color: selectedColor === 'Tails' ? '#fff' : '#e74c3c' }}>Tails</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={[styles.colorButton, { backgroundColor: selectedColor === 'Standing' ? '#f1c40f' : '#fff' }]}
-                            onPress={() => setSelectedColor('Standing')}
+                            style={[styles.colorButton, { backgroundColor: selectedColor === 'Edge' ? '#f1c40f' : '#fff' }]}
+                            onPress={() => setSelectedColor('Edge')}
                         >
-                            <Text style={{ color: selectedColor === 'Standing' ? '#fff' : '#555' }}>Standing</Text>
+                            <Text style={{ color: selectedColor === 'Edge' ? '#fff' : '#555' }}>Edge</Text>
                         </TouchableOpacity>
                     </View>
                     <TextInput

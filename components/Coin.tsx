@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, Alert, ImageBackground } from 'react-native';
 import BetModal from './BetModal';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from './types';
@@ -10,11 +10,24 @@ interface CoinProps {
   setTokenCount: React.Dispatch<React.SetStateAction<number>>;
 }
 
+const coinImages: { [key: string]: any } = {
+  // Heads
+  "Heads": require("../assets/Coins/Heads_klaava.png"),
+  // Tails
+  "Tails": require("../assets/Coins/Tails_kruuna.png"),
+  // Edge
+  "Edge": require("../assets/Coins/Egde_pysty.png"),
+  // Default
+  "Default": require("../assets/Coins/default.png"),
+  // Default
+  "Background": require("../assets/Coins/Background.png"),
+};
+
 const Coin: React.FC<CoinProps> = ({ navigation, tokenCount, setTokenCount }) => {
-  const [side, setSide] = useState<'Blue' | 'Red' | 'Standing' | null>(null);
-  const [selectedColor, setSelectedColor] = useState<'Blue' | 'Red' | 'Standing' | null>(null);
-  const [blueCount, setBlueCount] = useState(0);
-  const [redCount, setRedCount] = useState(0);
+  const [side, setSide] = useState<'Heads' | 'Tails' | 'Edge' | null>(null);
+  const [selectedColor, setSelectedColor] = useState<'Heads' | 'Tails' | 'Edge' | null>(null);
+  const [headsCount, setHeadsCount] = useState(0);
+  const [tailsCount, setTailsCount] = useState(0);
   const [standingCount, setStandingCount] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [betAmount, setBetAmount] = useState(0);  // Track the bet amount
@@ -23,7 +36,7 @@ const Coin: React.FC<CoinProps> = ({ navigation, tokenCount, setTokenCount }) =>
   const [winAmount, setWinAmount] = useState(0);  // Track the win amount
   const [showWinAmount, setShowWinAmount] = useState(false);  // Control win amount visibility
   
-  const handlePlaceBet = (color: 'Blue' | 'Red' | 'Standing', amount: number) => {
+  const handlePlaceBet = (color: 'Heads' | 'Tails' | 'Edge', amount: number) => {
     console.log(`Placed bet on ${color} with amount ${amount}`);
     setBetAmount(amount);
     setSelectedColor(color);
@@ -57,10 +70,10 @@ const Coin: React.FC<CoinProps> = ({ navigation, tokenCount, setTokenCount }) =>
 
     // Determine the win multiplier
     if (randomNumber < 0.05) {
-      setSide('Standing');
-      winMultiplier = selectedColor === 'Standing' ? 20 : 0;
+      setSide('Edge');
+      winMultiplier = selectedColor === 'Edge' ? 20 : 0;
     } else {
-      const randomSide = Math.random() < 0.5 ? 'Blue' : 'Red';
+      const randomSide = Math.random() < 0.5 ? 'Heads' : 'Tails';
       setSide(randomSide);
 
       if (randomSide === selectedColor) {
@@ -99,8 +112,8 @@ const Coin: React.FC<CoinProps> = ({ navigation, tokenCount, setTokenCount }) =>
 
   const resetResults = () => {
     setSide(null);
-    setBlueCount(0);
-    setRedCount(0);
+    setHeadsCount(0);
+    setTailsCount(0);
     setStandingCount(0);
   };
 
@@ -119,13 +132,13 @@ const Coin: React.FC<CoinProps> = ({ navigation, tokenCount, setTokenCount }) =>
   useEffect(() => {
     if (!isAnimating) {
       switch (side) {
-        case 'Blue':
-          setBlueCount((prevCount) => prevCount + 1);
+        case 'Heads':
+          setHeadsCount((prevCount) => prevCount + 1);
           break;
-        case 'Red':
-          setRedCount((prevCount) => prevCount + 1);
+        case 'Tails':
+          setTailsCount((prevCount) => prevCount + 1);
           break;
-        case 'Standing':
+        case 'Edge':
           setStandingCount((prevCount) => prevCount + 1);
           break;
         default:
@@ -144,39 +157,49 @@ const Coin: React.FC<CoinProps> = ({ navigation, tokenCount, setTokenCount }) =>
     outputRange: ['180deg', '1980deg', '3600deg'],
   });
 
-  const getCircleColor = (): string => {
-    if (isAnimating) {
-      return '#ccc';  // Gray when animating
-    } else {
-      switch (side) {
-        case 'Blue':
-          return '#3498db';  // Blue
-        case 'Red':
-          return '#e74c3c';  // Red
-        case 'Standing':
-          return '#f1c40f';  // Yellow for Standing
-        default:
-          return '#999';  // Gray by default
-      }
-    }
-  };
-
   return (
+    <ImageBackground source={coinImages["Background"]} style={styles.background}>
     <View style={styles.container}>
-      <View style={styles.coinContainer}>
-        <Animated.View
-          style={[styles.front, { transform: [{ rotateY: frontSpin }], backgroundColor: getCircleColor() }]}
+<View style={styles.coinContainer}>
+  <Animated.View style={[styles.front, { transform: [{ rotateY: frontSpin }] }]}>
+    <Animated.Image
+      source={
+        isAnimating || !side
+          ? require('../assets/Coins/default.png')
+          : coinImages[side]
+      }
+      style={[
+    styles.coinImage,
+    side === 'Edge' && styles.edgeStyle // 👈 tämä rivi
+  ]}
+  resizeMode="contain"
+    />
+  </Animated.View>
+
+  <Animated.View style={[styles.back, { transform: [{ rotateY: backSpin }] }]}>
+    <Animated.Image
+      source={
+        isAnimating || !side
+          ? require('../assets/Coins/default.png')
+          : coinImages[side]
+      }
+      style={[
+        styles.coinImage,
+        side === 'Edge' && styles.edgeStyle // 👈 tämä rivi
+      ]}
+      resizeMode="contain"
         />
-        <Animated.View
-          style={[styles.back, { transform: [{ rotateY: backSpin }], backgroundColor: getCircleColor() }]}
-        />
-      </View>
+  </Animated.View>
+</View>
 
       <View style={styles.results}>
-        <Text>{`Results:`}</Text>
-        <Text>{`Blue: ${blueCount}`}</Text>
-        <Text>{`Red: ${redCount}`}</Text>
-        <Text>{`Standing: ${standingCount}`}</Text>
+        <Text style={{ color: '#ffff', fontWeight: 'bold' }}>{`History:`}</Text>
+        <Text style={{ color: '#ffff' }}>{`Heads: ${headsCount}`}</Text>
+        <Text style={{ color: '#ffff' }}>{`Tails: ${tailsCount}`}</Text>
+        <Text style={{ color: '#ffff' }}>{`Edge: ${standingCount}`}</Text>
+        <TouchableOpacity onPress={resetResults} style={styles.buttonClear}>
+        <Text style={styles.buttonText}>Reset</Text>
+      </TouchableOpacity>
       </View>
 
       <View style={styles.tokenContainer}>
@@ -192,10 +215,6 @@ const Coin: React.FC<CoinProps> = ({ navigation, tokenCount, setTokenCount }) =>
 
       <TouchableOpacity onPress={() => setBetModalVisible(true)} style={styles.button}>
         <Text style={styles.buttonText}>Bet</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={resetResults} style={styles.button}>
-        <Text style={styles.buttonText}>Clear Results</Text>
       </TouchableOpacity>
 
       <BetModal
@@ -222,10 +241,15 @@ const Coin: React.FC<CoinProps> = ({ navigation, tokenCount, setTokenCount }) =>
         )}
       </View>
     </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    resizeMode: "cover", // Tämä varmistaa, että kuva kattaa koko taustan
+  },
   container: {
     flex: 1,
     alignItems: 'center',
@@ -267,9 +291,15 @@ const styles = StyleSheet.create({
   },
   resultText: {
     fontSize: 18,
+    color: '#fff',
   },
   results: {
-    marginTop: 20,
+    marginTop: 10,
+    position: 'absolute',
+    top: 10,
+    left: 10,
+   //alignItems: 'center',
+  //  justifyContent: 'center',
   },
   tokenContainer: {
     position: 'absolute',
@@ -278,15 +308,17 @@ const styles = StyleSheet.create({
   },
   tokenText: {
     fontSize: 16,
+    color: '#fff',
   },
   betContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 35,
+    marginTop: 25,
     marginBottom: 50,
   },
   betText: {
     fontSize: 16,
+    color: '#fff',
   },
   warningContainer: {
     position: 'absolute',
@@ -307,7 +339,7 @@ const styles = StyleSheet.create({
   },
   outcomeContainer: {
     position: 'absolute',
-    bottom: 70,
+    bottom: 150,
     left: 0,
     right: 0,
     alignItems: 'center',
@@ -319,6 +351,26 @@ const styles = StyleSheet.create({
     color: '#4CAF50',
     fontWeight: 'bold',
     marginTop: 10,
+  },
+  buttonClear: {
+    padding: 10,
+    alignItems: 'center',
+    backgroundColor: '#e74c3c',
+    borderRadius: 5,
+    marginTop: 5,
+    //position: 'absolute',
+   // top: 100,
+    left: -5,
+  },
+  coinImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  edgeStyle: {
+    width: 100,
+    height: 100,
+    borderRadius: 5,
   },
 });
 
