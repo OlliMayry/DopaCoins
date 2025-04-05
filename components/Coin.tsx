@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, Alert, ImageBackground } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, Alert, ImageBackground, Image } from 'react-native';
 import BetModal from './BetModal';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from './types';
@@ -20,7 +20,7 @@ const coinImages: { [key: string]: any } = {
   // Default
   "Default": require("../assets/Coins/default.png"),
   // Default
-  "Background": require("../assets/Coins/Background.png"),
+  "Background": require("../assets/Coins/Background2.png"),
 };
 
 const Coin: React.FC<CoinProps> = ({ navigation, tokenCount, setTokenCount }) => {
@@ -194,9 +194,24 @@ const Coin: React.FC<CoinProps> = ({ navigation, tokenCount, setTokenCount }) =>
 
       <View style={styles.results}>
         <Text style={{ color: '#ffff', fontWeight: 'bold' }}>{`History:`}</Text>
-        <Text style={{ color: '#ffff' }}>{`Heads: ${headsCount}`}</Text>
-        <Text style={{ color: '#ffff' }}>{`Tails: ${tailsCount}`}</Text>
-        <Text style={{ color: '#ffff' }}>{`Edge: ${standingCount}`}</Text>
+
+          {/* Heads Text and Image */}
+  <View style={styles.historyItem}><Image source={coinImages["Heads"]} style={styles.resultImage} />
+    <Text style={{ color: '#ffff' }}>{`Heads: ${headsCount}`}</Text>
+    
+  </View>
+  
+  {/* Tails Text and Image */}
+  <View style={styles.historyItem}><Image source={coinImages["Tails"]} style={styles.resultImage} />
+    <Text style={{ color: '#ffff' }}>{`Tails: ${tailsCount}`}</Text>
+    
+  </View>
+
+  {/* Edge Text and Image */}
+  <View style={styles.historyItem}><Image source={coinImages["Edge"]} style={styles.resultImage} />
+  <Text style={{ color: '#ffff' }}>{`Edge: ${standingCount}`}</Text>
+  
+  </View>
         <TouchableOpacity onPress={resetResults} style={styles.buttonClear}>
         <Text style={styles.buttonText}>Reset</Text>
       </TouchableOpacity>
@@ -353,7 +368,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   buttonClear: {
-    padding: 10,
+    padding: 5,
     alignItems: 'center',
     backgroundColor: '#e74c3c',
     borderRadius: 5,
@@ -371,6 +386,16 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 5,
+  },
+  historyItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,  // Adds some space between rows
+  },
+  resultImage: {
+    width: 20,  // Adjust the size of the image
+    height: 20, // Adjust the size of the image
+    marginRight: 5, // Adds some space between the text and the image
   },
 });
 
