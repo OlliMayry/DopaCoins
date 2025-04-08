@@ -77,7 +77,7 @@ const cardImages: { [key: string]: any } = {
   // Kortin selkäpuoli
   "Card-Back": require("../assets/Cards/Card around.png"),
   // Korttipakan selkäpuoli
-  "Deck-Back": require("../assets/Cards/Deck of cards.png"),
+  "Deck-Back": require("../assets/Cards/CardStack.png"),
   // Kahden kortin selkäpuoli
   "Double-Back": require("../assets/Cards/Double around.png"),
   // Joker
@@ -467,7 +467,8 @@ const handleDoubleCardSelection = (selectedIndex: number) => {
       resizeMode: "cover", // Tämä varmistaa, että kuva kattaa koko taustan
     },
     deckBack: {
-        width: 60,
+        width: 66.043161,
+       // width: 60,
         height: 90,
         position: "absolute",
        // zIndex: 1,  Tämä varmistaa, että kuva tulee näkyviin ennen kortteja
@@ -542,8 +543,9 @@ const handleDoubleCardSelection = (selectedIndex: number) => {
     },
     overlayCard: {
       position: 'absolute',
-      top: 7.5,
-      left: 3.5,
+      top: 5.5,
+      left: 4.5,
+     //resizeMode: "cover"
     },
     buttonDisabled: {
       backgroundColor: "#888"

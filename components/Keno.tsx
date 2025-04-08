@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Animated, Dimensions } from 'react-native';
 
 interface KenoProps {
   tokenCount: number;
@@ -24,6 +24,11 @@ const Keno: React.FC<KenoProps> = ({ tokenCount, setTokenCount }) => {
   const [hitNumbers, setHitNumbers] = useState<number[]>([]);
   const [wonAmount, setWonAmount] = useState<number | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [animatedBalls, setAnimatedBalls] = useState<{ num: number, anim: Animated.Value }[]>([]);
+  const [flyingBalls, setFlyingBalls] = useState<any[]>([]);
+  const gridRefs = useRef<Record<number, View>>({});
+  const ballIdRef = useRef(0);
+
 
   const toggleNumber = (num: number) => {
     if (selectedNumbers.includes(num)) {
@@ -46,22 +51,36 @@ const Keno: React.FC<KenoProps> = ({ tokenCount, setTokenCount }) => {
     }
   };
 
-  const startGame = () => {
+  const startGame = async () => {
     if (tokenCount < betAmount || selectedNumbers.length < 2) return;
+  
     setTokenCount(prev => prev - betAmount);
     setIsDrawing(true);
     setDrawNumbers([]);
     setHitNumbers([]);
     setWonAmount(null);
-    
+  
     const newDrawNumbers = generateKenoDraw();
-    setTimeout(() => {
-      setDrawNumbers(newDrawNumbers);
-      const hits = selectedNumbers.filter(num => newDrawNumbers.includes(num));
-      setHitNumbers(hits);
-      calculateWinnings(hits.length);
-      setIsDrawing(false);
-    }, 2000);
+    const revealed: number[] = [];
+  
+    for (let i = 0; i < newDrawNumbers.length; i++) {
+      await new Promise(resolve => setTimeout(resolve, 600)); // Reveal delay
+      revealed.push(newDrawNumbers[i]);
+      setDrawNumbers([...revealed]);
+  
+      const hitsSoFar = selectedNumbers.filter(num => revealed.includes(num));
+      setHitNumbers(hitsSoFar);
+    
+       // 💥 Fire cannonball if this number is a hit
+    if (selectedNumbers.includes(newDrawNumbers[i])) {
+      fireCannonAt(newDrawNumbers[i]);
+    }
+  }
+  
+    const finalHits = selectedNumbers.filter(num => newDrawNumbers.includes(num));
+    setHitNumbers(finalHits);
+    calculateWinnings(finalHits.length);
+    setIsDrawing(false);
   };
 
   const calculateWinnings = (hitCount: number) => {
@@ -105,6 +124,38 @@ const Keno: React.FC<KenoProps> = ({ tokenCount, setTokenCount }) => {
     setDrawNumbers([]);
     setHitNumbers([]);
   };
+  const fireCannonAt = (targetNum: number) => {
+    const ref = gridRefs.current[targetNum];
+    if (!ref) return;
+  
+    ref.measureInWindow((x, y, width, height) => {
+      const startX = Dimensions.get('window').width / 2 - 10;
+      const startY = Dimensions.get('window').height - 50;
+  
+      const translateX = new Animated.Value(startX);
+      const translateY = new Animated.Value(startY);
+      const id = ballIdRef.current++;
+  
+      setFlyingBalls(prev => [...prev, { id, translateX, translateY }]);
+  
+      Animated.parallel([
+        Animated.timing(translateX, {
+          toValue: x + width / 2 - 10,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateY, {
+          toValue: y + height / 2 - 10,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        // Remove after impact
+        setFlyingBalls(prev => prev.filter(ball => ball.id !== id));
+      });
+    });
+  };
+
 
   return (
     <View style={styles.container}>
@@ -115,16 +166,43 @@ const Keno: React.FC<KenoProps> = ({ tokenCount, setTokenCount }) => {
       <Text style={styles.title}>Select 2-5 numbers</Text>
 
  <View style={styles.gameContainer}>
+ {flyingBalls.map((ball) => (
+  <Animated.View
+    key={ball.id}
+    style={{
+      position: 'absolute',
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      backgroundColor: 'black',
+      transform: [
+        { translateX: ball.translateX },
+        { translateY: ball.translateY }
+      ],
+      zIndex: 999,  // Increase the zIndex significantly
+      // Adding debug border color to ensure visibility of the flying balls
+      borderWidth: 2,
+      borderColor: 'black',
+    }}
+  />
+))}
   {/* Number Grid Section */}
   <FlatList
-    data={Array.from({ length: 20 }, (_, i) => i + 1)}
-    numColumns={4}
-    renderItem={({ item }) => (
+  data={Array.from({ length: 20 }, (_, i) => i + 1)}
+  numColumns={4}
+  renderItem={({ item }) => (
+    <View
+      ref={ref => {
+        if (ref) {
+          gridRefs.current[item] = ref;
+        }
+      }}
+    >
       <TouchableOpacity
         style={[
           styles.numberButton,
           selectedNumbers.includes(item) ? styles.selected : {},
-          drawNumbers.includes(item) && hitNumbers.includes(item) ? styles.hit : 
+          drawNumbers.includes(item) && hitNumbers.includes(item) ? styles.hit :
           drawNumbers.includes(item) ? styles.missed : {}
         ]}
         onPress={() => !isDrawing && toggleNumber(item)}
@@ -132,9 +210,11 @@ const Keno: React.FC<KenoProps> = ({ tokenCount, setTokenCount }) => {
       >
         <Text style={styles.numberText}>{item}</Text>
       </TouchableOpacity>
-    )}
-    keyExtractor={(item) => item.toString()}
-  />
+    </View>
+  )}
+  keyExtractor={(item) => item.toString()}
+/>
+
 
 {/* Payout Table on the Right */}
 <View style={styles.payoutTable}>
@@ -151,6 +231,7 @@ const Keno: React.FC<KenoProps> = ({ tokenCount, setTokenCount }) => {
         ) : null}
       </View>
 
+   {/*    <View style={styles.controls}>   */}
       <TouchableOpacity
         onPress={startGame}
         style={[styles.startButton, selectedNumbers.length < 2 || isDrawing ? styles.disabledButton : {}]}
@@ -176,9 +257,9 @@ const Keno: React.FC<KenoProps> = ({ tokenCount, setTokenCount }) => {
         <TouchableOpacity onPress={() => handleBetAmountChange(1)} style={styles.betButton}>
           <Text style={styles.betText}>+</Text>
         </TouchableOpacity>
-
       </View>
-    </View>
+      </View>
+  /*   </View> */
   );
 };
 
@@ -199,7 +280,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     marginTop: 100, // Reduced the margin to move the title closer to the buttons
-    marginBottom: 10,
+    marginBottom: 5,
   },
   numberButton: {
     width: 40,
@@ -207,7 +288,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#3498db',
-    borderRadius: 20,
+    borderRadius: 5,
     margin: 5,
   },
   selected: {
@@ -310,6 +391,8 @@ const styles = StyleSheet.create({
     width: '100%',
     marginTop: 10,
     marginLeft: 145,  // Adjust this value to shift the container to the left
+    overflow: 'visible', 
+   // top: 35,
   },
   payoutTable: {
     width: 80, // Fixed width
@@ -330,6 +413,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 3,
   },  
+ /*  controls: {
+bottom: 30,
+  }, */
 });
 
 export default Keno;

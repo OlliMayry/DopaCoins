@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, Image, ImageBackground } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from './types';
 
@@ -17,7 +17,12 @@ const SPIN_DURATION = 4000;
 const caseImages: { [key: string]: any } = {
  // Knife image
  "50x": require("../assets/Cases/Knife.png"),
+ "25x": require("../assets/Cases/AWP1.png"),
+ "10x": require("../assets/Cases/AK_R.png"),
+ "3x": require("../assets/Cases/Dessu.png"),
  "1x": require("../assets/Cases/RK.png"),
+ "0x": require("../assets/Cases/Feather.png"),
+  "Background": require("../assets/Case bg.png"),
 }
 
 const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) => {
@@ -147,10 +152,18 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
   };
 
   return (
+    <ImageBackground source={caseImages["Background"]} style={styles.background}>
     <View style={styles.container}>
       <View style={styles.tokenContainer}>
         <Text style={styles.tokenText}>Coins: {tokenCount.toFixed(2)}</Text>
       </View>
+
+      {/* You Win Text */}
+      {winAmount !== null && winAmount > 0 && (
+      <Text style={[styles.winText, { position: 'absolute', bottom: 120 }]}>
+        {`You Win: ${winAmount}`}
+      </Text>
+    )}
 
       {/* If it's the first visit, show the black box with a question mark */}
       {firstVisit ? (
@@ -167,9 +180,17 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
            >
              {value === 'x50' ? (
                <Image source={caseImages['50x']} style={styles.image} />
+               ) : value === 'x25' ? (
+                <Image source={caseImages['25x']} style={styles.image} />
+              ) : value === 'x10' ? (
+                <Image source={caseImages['10x']} style={styles.image} />
+              ) : value === 'x3' ? (
+                <Image source={caseImages['3x']} style={styles.image} />
               ) : value === 'x1' ? (
                 <Image source={caseImages['1x']} style={styles.image} />
-              ) : (
+              ) : value === 'x0' ? (
+              <Image source={caseImages['0x']} style={styles.image} />
+            ) : (
                <Text style={styles.boxText}>{value}</Text>
              )}
            </View>
@@ -179,39 +200,61 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
       )}
 
       <View style={styles.verticalLine}></View>
+      <View style={styles.rContainer}>
       <Text style={styles.resultText}>
         {resultNumber ? `Result: ${resultNumber}` : isRolling ? 'Rolling...' : 'Press to Open'}
       </Text>
 
       <TouchableOpacity 
           onPress={openCaseAndSpin} 
-          style={[styles.caseBox, { backgroundColor: isRolling ? '#95a5a6' : '#3498db' }]} 
+          style={[styles.caseBox, { backgroundColor: isRolling ? '#7f8c8d' : '#3498db' }]} 
           disabled={isRolling}
         >
           <Text style={styles.caseText}>Open Case</Text>
       </TouchableOpacity>
 
       <View style={styles.betControls}>
-        <TouchableOpacity onPress={() => setBetAmount((prev) => Math.max(1, prev - 1))} style={styles.betButton}>
-          <Text style={styles.betText}>-</Text>
-        </TouchableOpacity>
-        <Text style={styles.betAmount}>Bet: {betAmount}</Text>
-        <TouchableOpacity onPress={() => setBetAmount((prev) => prev + 1)} style={styles.betButton}>
-          <Text style={styles.betText}>+</Text>
-        </TouchableOpacity>
-      </View>
+  <TouchableOpacity
+    onPress={() => setBetAmount((prev) => Math.max(1, prev - 1))}
+    style={[
+      styles.betButton,
+      isRolling && styles.betButtonDisabled
+    ]}
+    disabled={isRolling}
+  >
+    <Text style={styles.betText}>-</Text>
+  </TouchableOpacity>
 
-      {/* You Win Text */}
-        {winAmount !== null && winAmount > 0 && (
-      <Text style={[styles.winText, { position: 'absolute', bottom: 120 }]}>
-        {`You Win: ${winAmount}`}
-      </Text>
-    )}
+  <Text style={styles.betAmount}>Bet: {betAmount}</Text>
+
+  <TouchableOpacity
+    onPress={() => setBetAmount((prev) => prev + 1)}
+    style={[
+      styles.betButton,
+      isRolling && styles.betButtonDisabled
+    ]}
+    disabled={isRolling}
+  >
+    <Text style={styles.betText}>+</Text>
+  </TouchableOpacity>
+</View>
+</View>    
     </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    resizeMode: "cover", 
+  },
+  rContainer:{
+alignItems: 'center',
+justifyContent: 'center',
+position: 'absolute',
+top: '52.5%',
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
@@ -224,6 +267,7 @@ const styles = StyleSheet.create({
   },
   tokenText: {
     fontSize: 16,
+    color: '#fff',
   },
   caseBox: {
     width: 200,
@@ -243,7 +287,7 @@ const styles = StyleSheet.create({
     width: ITEM_WIDTH * 3,
     height: 150,
     overflow: 'hidden',
-    marginBottom: 20,
+    marginBottom: 187.5,
   },
   reel: {
     flexDirection: 'row',
@@ -274,12 +318,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginTop: 10,
     fontWeight: 'bold',
+    color: '#fff',
   },
   winText: {
     fontSize: 20,
     color: '#27ae60', // Green text to indicate winning
     fontWeight: 'bold',
-    marginTop: 10,
+    top: 90,
   },
   betControls: {
     flexDirection: 'row',
@@ -295,6 +340,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginHorizontal: 10,
   },
+  betButtonDisabled: {
+    backgroundColor: '#7f8c8d', // Greyed out color
+  },
   betText: {
     fontSize: 24,
     color: '#fff',
@@ -303,6 +351,7 @@ const styles = StyleSheet.create({
   betAmount: {
     fontSize: 20,
     fontWeight: 'bold',
+    color: '#fff',
   },
   questionMarkBox: {
     width: 150,
@@ -311,7 +360,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
-    marginBottom: 10,
+    marginBottom: 187.5,
   },
   questionMark: {
     fontSize: 60,

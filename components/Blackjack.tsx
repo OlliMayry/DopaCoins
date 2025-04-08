@@ -74,7 +74,7 @@ const cardImages: { [key: string]: any } = {
   // Kortin selkäpuoli
   "Card-Back": require("../assets/Cards/Card around.png"),
   // Korttipakan selkäpuoli
-  "Deck-Back": require("../assets/Cards/Deck of cards.png"),
+  "Deck-Back": require("../assets/Cards/CardStack.png"),
   //Background image
   "Background": require("../assets/Blackjack background.png"),
 };
@@ -186,6 +186,7 @@ const shuffledDeck = generateDeck().sort(() => Math.random() - 0.5);
       setGameStatus('You Bust! Dealer Wins');
       setGameResult('Dealer Wins');
       setWinAmount(0);
+      setIsDealerCardFaceDown(false); // Reveal the dealer's second card
     }
   };
 
@@ -236,6 +237,14 @@ const startNewGame = () => {
   dealCards(); // Immediately deal new cards instead of going to "Start the Game"
 };
 const isHitDisabled = calculateHandValue(playerCards) >= 21;
+// ennen returnia tai JSX:ää määrittele nämä:
+const isBetActive =
+  gameStatus === 'Start the Game' ||
+  gameStatus === 'You Win!' ||
+  gameStatus === "It\'s a Tie" ||
+  gameResult === 'Dealer Wins';
+
+const showMoveBetControls = gameStatus === 'Start the Game';
 
   return (
     <ImageBackground source={cardImages["Background"]} style={styles.background}>
@@ -310,25 +319,45 @@ const isHitDisabled = calculateHandValue(playerCards) >= 21;
         )}
       </View>
   
-      <View style={styles.betControls}>
-        <TouchableOpacity 
-          onPress={() => setBetAmount(prev => Math.max(1, prev - 1))} 
-          style={[styles.betButton, gameStatus === 'Game in Progress' && styles.disabledButton]} 
-          disabled={gameStatus === 'Game in Progress'}
-        >
-          <Text style={styles.betText}>-</Text>
-        </TouchableOpacity>
+      <View style={[styles.betControls, showMoveBetControls && styles.moveBetControls]}>
+  {isBetActive ? (
+    <>
+      <TouchableOpacity 
+        onPress={() => setBetAmount(prev => Math.max(1, prev - 1))} 
+        style={styles.betButton}
+      >
+        <Text style={styles.betText}>-</Text>
+      </TouchableOpacity>
 
-        <Text style={styles.betAmount}>Bet: {betAmount}</Text>
+      <Text style={styles.betAmount}>Bet: {betAmount}</Text>
 
-        <TouchableOpacity 
-          onPress={() => setBetAmount(prev => prev + 1)} 
-          style={[styles.betButton, gameStatus === 'Game in Progress' && styles.disabledButton]} 
-          disabled={gameStatus === 'Game in Progress'}
-        >
-          <Text style={styles.betText}>+</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity 
+        onPress={() => setBetAmount(prev => prev + 1)} 
+        style={styles.betButton}
+      >
+        <Text style={styles.betText}>+</Text>
+      </TouchableOpacity>
+    </>
+  ) : (
+    <>
+      <TouchableOpacity 
+        style={[styles.betButton, styles.disabledButton]} 
+        disabled={true}
+      >
+        <Text style={styles.betText}>-</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.betAmount}>Bet: {betAmount}</Text>
+
+      <TouchableOpacity 
+        style={[styles.betButton, styles.disabledButton]} 
+        disabled={true}
+      >
+        <Text style={styles.betText}>+</Text>
+      </TouchableOpacity>
+    </>
+  )}
+</View>
     </View>
     </ImageBackground>
   );
@@ -396,7 +425,7 @@ actionButton: {
   //marginTop: 20,
 },
 actionText: {
-  fontSize: 18,
+  fontSize: 16,
   color: '#fff',
   fontWeight: 'bold',
 },
@@ -434,8 +463,8 @@ disabledButton: {
   backgroundColor: '#bdc3c7',
 },
 deckImage: {
-  width: 100,
-  height: 140,
+  width: 105,
+  height: 143.5,
   marginVertical: 10,
 },
 startGameText: {
@@ -446,11 +475,14 @@ startGameText: {
   color: '#fff',
 },
 startGameButton: {
-  top: -40,
+  top: 40,
   marginTop: 20,
   // marginTop: 20,  // Voit säätää tätä arvoa tarpeen mukaan
   // position: 'absolute',
   //marginTop: 60,
+},
+moveBetControls:{
+top: 45,
 },
 });
 

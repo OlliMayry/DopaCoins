@@ -221,16 +221,26 @@ const Coin: React.FC<CoinProps> = ({ navigation, tokenCount, setTokenCount }) =>
         <Text style={styles.tokenText}>Coins: {tokenCount.toFixed(2)}</Text>
       </View>
 
-      <TouchableOpacity
-        onPress={flipCoin}
-        style={[styles.button, !selectedColor && styles.disabledButton]}
-        disabled={!selectedColor}>
-        <Text style={styles.buttonText}>Flip</Text>
-      </TouchableOpacity>
+      <View style={styles.conaContainer}>
+  <TouchableOpacity
+    onPress={flipCoin}
+    style={[
+      styles.button,
+      (!selectedColor || isAnimating) && styles.disabledButton
+    ]}
+    disabled={!selectedColor || isAnimating}
+  >
+    <Text style={styles.buttonText}>Flip</Text>
+  </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => setBetModalVisible(true)} style={styles.button}>
-        <Text style={styles.buttonText}>Bet</Text>
-      </TouchableOpacity>
+  <TouchableOpacity
+    onPress={() => setBetModalVisible(true)}
+    style={[styles.button1, isAnimating && styles.disabledButton]}
+    disabled={isAnimating}
+  >
+    <Text style={styles.buttonText}>Bet</Text>
+  </TouchableOpacity>
+</View>
 
       <BetModal
         isVisible={betModalVisible}
@@ -297,9 +307,16 @@ const styles = StyleSheet.create({
   },
   button: {
     padding: 10,
-    backgroundColor: '#3498db',
+    backgroundColor: '#007bff',
     borderRadius: 5,
     marginTop: 15,
+  },
+  button1: {
+    padding: 10,
+    backgroundColor: '#007bff',
+    borderRadius: 5,
+    marginTop: 15,
+    marginBottom: 10,
   },
   buttonText: {
     color: '#fff',
@@ -328,12 +345,13 @@ const styles = StyleSheet.create({
   betContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 25,
+    marginTop: 5,
     marginBottom: 50,
   },
   betText: {
     fontSize: 16,
     color: '#fff',
+    position: 'absolute',
   },
   warningContainer: {
     position: 'absolute',
@@ -354,7 +372,7 @@ const styles = StyleSheet.create({
   },
   outcomeContainer: {
     position: 'absolute',
-    bottom: 150,
+    bottom: 145,
     left: 0,
     right: 0,
     alignItems: 'center',
@@ -366,6 +384,7 @@ const styles = StyleSheet.create({
     color: '#4CAF50',
     fontWeight: 'bold',
     marginTop: 10,
+    //bottom: 360,
   },
   buttonClear: {
     padding: 5,
@@ -397,6 +416,9 @@ const styles = StyleSheet.create({
     height: 20, // Adjust the size of the image
     marginRight: 5, // Adds some space between the text and the image
   },
+  conaContainer:{
+    marginBottom: 20,
+  }
 });
 
 export default Coin;
