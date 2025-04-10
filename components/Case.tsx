@@ -22,7 +22,8 @@ const caseImages: { [key: string]: any } = {
  "3x": require("../assets/Cases/Dessu.png"),
  "1x": require("../assets/Cases/RK.png"),
  "0x": require("../assets/Cases/Feather.png"),
-  "Background": require("../assets/Case bg.png"),
+  "Background": require("../assets/Case BG1.png"),
+  "Case": require("../assets/Cases/Ceissi.png"),
 }
 
 const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) => {
@@ -167,8 +168,8 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
 
       {/* If it's the first visit, show the black box with a question mark */}
       {firstVisit ? (
-        <View style={styles.questionMarkBox}>
-          <Text style={styles.questionMark}>?</Text>
+        <View style={styles.CaseBox}>
+           <Image source={caseImages['Case']} style={styles.image} />
         </View>
       ) : (
         <View style={styles.reelWrapper}>
@@ -199,7 +200,7 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
         </View>
       )}
 
-      <View style={styles.verticalLine}></View>
+{!firstVisit && <View style={styles.verticalLine} />}
       <View style={styles.rContainer}>
       <Text style={styles.resultText}>
         {resultNumber ? `Result: ${resultNumber}` : isRolling ? 'Rolling...' : 'Press to Open'}
@@ -307,7 +308,7 @@ top: '52.5%',
   },
   verticalLine: {
     position: 'absolute',
-    top: '21.5%',
+    top: '22%',
     left: '50%',
     width: 4,
     backgroundColor: '#e74c3c',
@@ -322,7 +323,7 @@ top: '52.5%',
   },
   winText: {
     fontSize: 20,
-    color: '#27ae60', // Green text to indicate winning
+    color: '#0FFF50', // Green text to indicate winning
     fontWeight: 'bold',
     top: 90,
   },
@@ -372,6 +373,9 @@ top: '52.5%',
     height: 150,
     resizeMode: 'contain',
     borderRadius: 10,
+  },
+  CaseBox: {
+    marginBottom: 187.5, 
   },
 });
 

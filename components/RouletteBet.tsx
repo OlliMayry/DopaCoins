@@ -6,13 +6,16 @@ interface RouletteBetProps {
     onClose: () => void;
     onPlaceBet: (betType: string, amount: number) => void;
     onClearBet: () => void;
-    selectedBet: string | null; // Accept selected bet
+    selectedBet: string | null; // Accepts the bet option (number, color, range, or dozen)
     betAmount: number;           // Accept bet amount
 }
 
 const RouletteBet: React.FC<RouletteBetProps> = ({ isVisible, onClose, onPlaceBet, onClearBet }) => {
-    const [selectedBet, setSelectedBet] = useState<string>(''); // Initial bet is empty (no selection)
-    const [selectedColorBet, setSelectedColorBet] = useState<string>(''); // Track selected color (Red or Black)
+    // We'll use separate state for each type of bet option.
+    const [selectedNumber, setSelectedNumber] = useState<string>(''); // For a specific number bet
+    const [selectedColorBet, setSelectedColorBet] = useState<string>(''); // For red or black
+    const [selectedRangeBet, setSelectedRangeBet] = useState<string>('');   // For 1-18 or 19-36
+    const [selectedDozenBet, setSelectedDozenBet] = useState<string>('');   // For 1st12, 2nd12, 3rd12
     const [betAmount, setBetAmount] = useState('');
 
     const handlePlaceBet = () => {
@@ -22,21 +25,27 @@ const RouletteBet: React.FC<RouletteBetProps> = ({ isVisible, onClose, onPlaceBe
             return;
         }
 
+        // Determine which bet type is active:
         if (selectedColorBet) {
-            onPlaceBet(selectedColorBet, amount); // Place the color bet (Red or Black)
-        } else if (selectedBet) {
-            onPlaceBet(selectedBet, amount); // Place the number bet (including '0')
+            onPlaceBet(selectedColorBet, amount);
+        } else if (selectedNumber) {
+            onPlaceBet(selectedNumber, amount);
+        } else if (selectedRangeBet) {
+            onPlaceBet(selectedRangeBet, amount);
+        } else if (selectedDozenBet) {
+            onPlaceBet(selectedDozenBet, amount);
         } else {
-            Alert.alert("No Bet Selected", "Please select a bet type (number or color).");
+            Alert.alert("No Bet Selected", "Please select a bet type (number, color, range, or dozen).");
             return;
         }
-
         onClose();
     };
 
     const handleClearBet = () => {
-        setSelectedBet(''); // Clear selected number
-        setSelectedColorBet(''); // Clear selected color
+        setSelectedNumber('');
+        setSelectedColorBet('');
+        setSelectedRangeBet('');
+        setSelectedDozenBet('');
         setBetAmount('');
         onClearBet();
     };
@@ -45,34 +54,63 @@ const RouletteBet: React.FC<RouletteBetProps> = ({ isVisible, onClose, onPlaceBe
 
     // Function to determine the color of the number
     const getColorForNumber = (num: number) => {
-        const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
-        const blackNumbers = [2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35];
-
+        const redNumbers = [32, 19, 21, 25, 34, 27, 36, 30, 23, 5, 16, 1, 14, 9, 18, 7, 12, 3];
+        const blackNumbers = [15, 4, 2, 17, 6, 13, 11, 8, 10, 24, 33, 20, 31, 22, 29, 28, 35, 26];
         if (num === 0) {
-            return 'green'; // Green for '0'
+            return 'green';
         } else if (redNumbers.includes(num)) {
             return 'red';
         } else if (blackNumbers.includes(num)) {
             return 'black';
         }
-        return ''; // Default case
+        return '';
     };
 
     const handleNumberSelect = (num: string) => {
-        if (selectedBet === num) {
-            setSelectedBet(''); // Unselect the current number
+        if (selectedNumber === num) {
+            setSelectedNumber('');
         } else {
-            setSelectedBet(num); // Select the new number
-            setSelectedColorBet(''); // Unselect the color bet if a number is selected
+            setSelectedNumber(num);
+            // Clear other selections
+            setSelectedColorBet('');
+            setSelectedRangeBet('');
+            setSelectedDozenBet('');
         }
     };
 
     const handleColorSelect = (color: string) => {
         if (selectedColorBet === color) {
-            setSelectedColorBet(''); // Unselect the color if already selected
+            setSelectedColorBet('');
         } else {
-            setSelectedColorBet(color); // Select the new color
-            setSelectedBet(''); // Unselect the number if a color is selected
+            setSelectedColorBet(color);
+            // Clear other selections
+            setSelectedNumber('');
+            setSelectedRangeBet('');
+            setSelectedDozenBet('');
+        }
+    };
+
+    const handleRangeSelect = (range: string) => {
+        if (selectedRangeBet === range) {
+            setSelectedRangeBet('');
+        } else {
+            setSelectedRangeBet(range);
+            // Clear others
+            setSelectedNumber('');
+            setSelectedColorBet('');
+            setSelectedDozenBet('');
+        }
+    };
+
+    const handleDozenSelect = (dozen: string) => {
+        if (selectedDozenBet === dozen) {
+            setSelectedDozenBet('');
+        } else {
+            setSelectedDozenBet(dozen);
+            // Clear others
+            setSelectedNumber('');
+            setSelectedColorBet('');
+            setSelectedRangeBet('');
         }
     };
 
@@ -90,29 +128,27 @@ const RouletteBet: React.FC<RouletteBetProps> = ({ isVisible, onClose, onPlaceBe
                                 style={[
                                     styles.numberButton,
                                     {
-                                        backgroundColor: selectedBet === num
+                                        backgroundColor: selectedNumber === num
                                             ? getColorForNumber(parseInt(num)) === 'red'
-                                                ? '#D32F2F' // Darker Red for selected
+                                                ? '#D32F2F'
                                                 : getColorForNumber(parseInt(num)) === 'black'
-                                                ? '#212121' // Darker Black for selected
-                                                : getColorForNumber(parseInt(num)) === 'green'
-                                                ? '#388E3C' // Darker Green for selected
-                                                : '#D3D3D3' // Default light color
+                                                    ? '#212121'
+                                                    : getColorForNumber(parseInt(num)) === 'green'
+                                                        ? '#388E3C'
+                                                        : '#D3D3D3'
                                             : getColorForNumber(parseInt(num)) === 'red'
-                                            ? '#FFCDD2' // Lighter Red for unselected
-                                            : getColorForNumber(parseInt(num)) === 'black'
-                                            ? '#BDBDBD' // Lighter Black for unselected
-                                            : getColorForNumber(parseInt(num)) === 'green'
-                                            ? '#A5D6A7' // Lighter Green for unselected
-                                            : '#D3D3D3', // Light grey for unselected
-                                        borderColor: selectedBet === num ? 'darkblue' : '#ccc', // Light border when unselected
+                                                ? '#FFCDD2'
+                                                : getColorForNumber(parseInt(num)) === 'black'
+                                                    ? '#BDBDBD'
+                                                    : getColorForNumber(parseInt(num)) === 'green'
+                                                        ? '#A5D6A7'
+                                                        : '#D3D3D3',
+                                        borderColor: selectedNumber === num ? 'darkblue' : '#ccc',
                                     },
                                 ]}
                                 onPress={() => handleNumberSelect(num)}
                             >
-                                <Text style={{ color: '#fff' }}>
-                                    {num === '0' ? '0' : num} {/* Display '0' properly */}
-                                </Text>
+                                <Text style={{ color: '#fff' }}>{num}</Text>
                             </TouchableOpacity>
                         ))}
                     </ScrollView>
@@ -123,8 +159,8 @@ const RouletteBet: React.FC<RouletteBetProps> = ({ isVisible, onClose, onPlaceBe
                             style={[
                                 styles.colorBetButton,
                                 {
-                                    backgroundColor: selectedColorBet === 'red' ? '#D32F2F' : '#FFCDD2', // Darker red if selected, lighter if not
-                                    borderColor: selectedColorBet === 'red' ? '#D32F2F' : '#FFCDD2', // Match the border to the background
+                                    backgroundColor: selectedColorBet === 'red' ? '#D32F2F' : '#FFCDD2',
+                                    borderColor: selectedColorBet === 'red' ? '#D32F2F' : '#FFCDD2',
                                 },
                             ]}
                             onPress={() => handleColorSelect('red')}
@@ -135,8 +171,8 @@ const RouletteBet: React.FC<RouletteBetProps> = ({ isVisible, onClose, onPlaceBe
                             style={[
                                 styles.colorBetButton,
                                 {
-                                    backgroundColor: selectedColorBet === 'black' ? '#212121' : '#BDBDBD', // Darker black if selected, lighter if not
-                                    borderColor: selectedColorBet === 'black' ? '#212121' : '#BDBDBD', // Match the border to the background
+                                    backgroundColor: selectedColorBet === 'black' ? '#212121' : '#BDBDBD',
+                                    borderColor: selectedColorBet === 'black' ? '#212121' : '#BDBDBD',
                                 },
                             ]}
                             onPress={() => handleColorSelect('black')}
@@ -145,12 +181,75 @@ const RouletteBet: React.FC<RouletteBetProps> = ({ isVisible, onClose, onPlaceBe
                         </TouchableOpacity>
                     </View>
 
+                    {/* Range Bet Options: 1-18 and 19-36 */}
+                    <View style={styles.rangeBetContainer}>
+                        <TouchableOpacity
+                            style={[
+                                styles.rangeBetButton,
+                                {
+                                    backgroundColor: selectedRangeBet === '1-18' ? '#FFA000' : '#FFE082',
+                                },
+                            ]}
+                            onPress={() => handleRangeSelect('1-18')}
+                        >
+                            <Text style={styles.colorBetText}>1-18</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[
+                                styles.rangeBetButton,
+                                {
+                                    backgroundColor: selectedRangeBet === '19-36' ? '#FFA000' : '#FFE082',
+                                },
+                            ]}
+                            onPress={() => handleRangeSelect('19-36')}
+                        >
+                            <Text style={styles.colorBetText}>19-36</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Dozen Bet Options: 1st12, 2nd12, 3rd12 */}
+                    <View style={styles.dozenBetContainer}>
+                        <TouchableOpacity
+                            style={[
+                                styles.dozenBetButton,
+                                {
+                                    backgroundColor: selectedDozenBet === '1st12' ? '#FFA000' : '#FFE082',
+                                },
+                            ]}
+                            onPress={() => handleDozenSelect('1st12')}
+                        >
+                            <Text style={styles.dozenBetText}>1st12</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[
+                                styles.dozenBetButton,
+                                {
+                                    backgroundColor: selectedDozenBet === '2nd12' ? '#FFA000' : '#FFE082',
+                                },
+                            ]}
+                            onPress={() => handleDozenSelect('2nd12')}
+                        >
+                            <Text style={styles.dozenBetText}>2nd12</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[
+                                styles.dozenBetButton,
+                                {
+                                    backgroundColor: selectedDozenBet === '3rd12' ? '#FFA000' : '#FFE082',
+                                },
+                            ]}
+                            onPress={() => handleDozenSelect('3rd12')}
+                        >
+                            <Text style={styles.dozenBetText}>3rd12</Text>
+                        </TouchableOpacity>
+                    </View>
+
                     {/* Bet Amount Input */}
                     <TextInput
                         style={styles.input}
                         placeholder="Enter Bet Amount"
                         keyboardType="numeric"
-                        value={betAmount} // Add this line
+                        value={betAmount}
                         onChangeText={(text) => setBetAmount(text)}
                     />
 
@@ -216,6 +315,38 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     colorBetText: {
+        color: 'white',
+        fontWeight: 'bold',
+    },
+    rangeBetContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginBottom: 20,
+    },
+    rangeBetButton: {
+        padding: 10,
+        borderRadius: 5,
+        borderWidth: 2,
+        width: 80,
+        marginHorizontal: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    dozenBetContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginBottom: 20,
+    },
+    dozenBetButton: {
+        padding: 10,
+        borderRadius: 5,
+        borderWidth: 2,
+        width: 70,
+        marginHorizontal: 5,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    dozenBetText: {
         color: 'white',
         fontWeight: 'bold',
     },
