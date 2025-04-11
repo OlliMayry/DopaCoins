@@ -15,20 +15,29 @@ const generateCrashMultiplier = () => {
   } else if (r < 0.7775) {
     // 1-2.99x: 37.5% chance
     return 1 + Math.random() * (2.99 - 1);
+  } else if (r < 0.8675) {
+    // 3-6.99x: 9% chance
+    return 3 + Math.random() * (6.99 - 3);
   } else if (r < 0.9275) {
-    // 3-9.99x: 15% chance
-    return 3 + Math.random() * (9.99 - 3);
+    // 7-9.99x: 6% chance
+    return 7 + Math.random() * (9.99 - 7);
+  } else if (r < 0.9575) {
+    // 10-17.499x: 3% chance
+    return 10 + Math.random() * (17.499 - 10);
   } else if (r < 0.9775) {
-    // 10-24.99x: 5% chance
-    return 10 + Math.random() * (24.99 - 10);
+    // 17.5-24.99x: 2% chance
+    return 17.5 + Math.random() * (24.99 - 17.5);
+  } else if (r < 0.995) {
+    // 25-32.499x: 1.75% chance
+    return 25 + Math.random() * (32.499 - 25);
   } else if (r < 0.9975) {
-    // 25-49.99x: 2% chance
-    return 25 + Math.random() * (49.99 - 25);
+    // 32.5-49.99x: 0.75% chance
+    return 32.5 + Math.random() * (49.99 - 32.5);
   } else {
     // 50-100x: 0.25% chance
     return 50 + Math.random() * (100 - 50);
-  } 
-}; //current Rtp is 373%
+  }
+};  // RTP 374.28%
 
 const Crash: React.FC<CrashProps> = ({ tokenCount, setTokenCount }) => {
   const [isRolling, setIsRolling] = useState(false);

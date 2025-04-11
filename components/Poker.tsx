@@ -25,7 +25,6 @@ const cardImages: { [key: string]: any } = {
   "Clubs-Q": require("../assets/Cards/Clubs/Q.png"),
   "Clubs-K": require("../assets/Cards/Clubs/K.png"),
 
-
   // Ruudut (Diamonds)
   "Diamonds-A": require("../assets/Cards/Diamonds/A.png"),
   "Diamonds-2": require("../assets/Cards/Diamonds/2.png"),
@@ -40,7 +39,6 @@ const cardImages: { [key: string]: any } = {
   "Diamonds-J": require("../assets/Cards/Diamonds/J.png"),
   "Diamonds-Q": require("../assets/Cards/Diamonds/Q.png"),
   "Diamonds-K": require("../assets/Cards/Diamonds/K.png"),
-
 
   // Hertat (Hearts)
   "Hearts-A": require("../assets/Cards/Hearts/A.png"),
@@ -57,7 +55,6 @@ const cardImages: { [key: string]: any } = {
   "Hearts-Q": require("../assets/Cards/Hearts/Q.png"),
   "Hearts-K": require("../assets/Cards/Hearts/K.png"),
 
-
   // Padat (Spades)
   "Spades-A": require("../assets/Cards/Spades/A.png"),
   "Spades-2": require("../assets/Cards/Spades/2.png"),
@@ -73,7 +70,6 @@ const cardImages: { [key: string]: any } = {
   "Spades-Q": require("../assets/Cards/Spades/Q.png"),
   "Spades-K": require("../assets/Cards/Spades/K.png"),
 
-
   // Kortin selkäpuoli
   "Card-Back": require("../assets/Cards/Card around.png"),
   // Korttipakan selkäpuoli
@@ -85,7 +81,6 @@ const cardImages: { [key: string]: any } = {
   // Background image
   "Background": require("../assets/Poker background.png"),
 };
-
 
 const suits = ["Clubs", "Diamonds", "Hearts", "Spades"];
 const ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
@@ -129,7 +124,6 @@ const Poker: React.FC<PokerProps> = ({ navigation, tokenCount, setTokenCount }) 
     }).start();
   }, [openedStack]);
 
-
   const calculateWin = (hand: string[]) => {
     const counts: { [key: string]: number } = {};
     const suits: { [key: string]: number } = {};
@@ -162,15 +156,12 @@ const Poker: React.FC<PokerProps> = ({ navigation, tokenCount, setTokenCount }) 
     return { winAmount: 0, handType: "No Win" }; // Ei voittanut mitään
 };
 
-
     const dealCards = () => {
       if (tokenCount < betAmount) return;
      
       setTokenCount(prev => prev - betAmount);
       setDealDisabled(true);
       setWinAmount(0);
-
-      //setOpenedStack([]);  Tyhjennä avattu pino ennen uutta jakoa
 
       // Resetoi animaatio alkuasentoon (piiloon)
       openedStackAnim.setValue(-50);
@@ -206,9 +197,6 @@ const Poker: React.FC<PokerProps> = ({ navigation, tokenCount, setTokenCount }) 
 
         const { winAmount, handType } = calculateWin(newHand); // Lasketaan voitto ja käden tyyppi
         if (winAmount > 0) {
-           /* setWinAmount(betAmount * winAmount); // Asetetaan voitto
-            setTokenCount(prev => prev + betAmount * winAmount); // Päivitetään tokenit
-            setHandType(handType); // Asetetaan käden tyyppi */
             setWinAmount(betAmount * winAmount);
       setHandType(handType);
         }
@@ -292,7 +280,6 @@ const handleDoubleCardSelection = (selectedIndex: number) => {
     }
   }, 500);
 };
-   
     return (
       <ImageBackground source={cardImages["Background"]} style={styles.background}>
         <View style={styles.container}>

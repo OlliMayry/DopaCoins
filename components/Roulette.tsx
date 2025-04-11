@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, Alert, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, Alert, Image, ImageBackground } from 'react-native';
 import RouletteWheelSVG from './RouletteWheelSVG';
 import RouletteBet from './RouletteBet';
 
@@ -17,6 +17,7 @@ interface RouletteProps {
 const rouletteImages: { [key: string]: any } = {
   "comp": require("../assets/Roulette/comp1.png"),
   "wheel": require("../assets/Roulette/Wheel.png"),
+  "background": require("../assets/Roulette/bg.png"),
 };
 
 const Roulette: React.FC<RouletteProps> = ({ tokenCount, setTokenCount }) => {
@@ -45,7 +46,7 @@ const Roulette: React.FC<RouletteProps> = ({ tokenCount, setTokenCount }) => {
   const getColorForNumber = (number: number) => {
     const redNumbers = [32, 19, 21, 25, 34, 27, 36, 30, 23, 5, 16, 1, 14, 9, 18, 7, 12, 3];
     const blackNumbers = [15, 4, 2, 17, 6, 13, 11, 8, 10, 24, 33, 20, 31, 22, 29, 28, 35, 26];
-    if (number === 0) return 'green';
+    if (number === 0) return '#0FFF50';
     if (redNumbers.includes(number)) return 'red';
     if (blackNumbers.includes(number)) return 'black';
     return '';
@@ -115,6 +116,20 @@ if (selectedBet === winningNum.toString()) {
       setIsSpinning(false);
     });
   };
+  const getBetBoxColor = (bet: string) => {
+    const lowerBet = bet.toLowerCase();
+  
+    // Full numeric check (to avoid parseInt confusion with strings like "1st12")
+    if (!isNaN(Number(bet)) && /^\d+$/.test(bet)) {
+      return getColorForNumber(Number(bet));
+    }
+  
+    if (lowerBet === 'red') return 'red';
+    if (lowerBet === 'black') return 'black';
+    if (lowerBet === '0') return getColorForNumber(0);
+  
+    return '#FFA000'; // All group bets and unknowns fall here
+  };
 
   const interpolatedRotation = wheelRotation.interpolate({
     inputRange: [0, 360],
@@ -122,28 +137,28 @@ if (selectedBet === winningNum.toString()) {
     extrapolate: 'extend',
   });
 
-  
-
   return (
+     <ImageBackground source={rouletteImages["background"]} style={styles.background}>
     <View style={styles.container}>
             <View style={styles.outComeContainer}>
-        {winningNumber !== null && (
-          <Text style={[styles.resultText, { color: getColorForNumber(winningNumber), position: 'absolute', top: '60%' }]}>
-            {`Result: ${winningNumber}`}
-          </Text>
-        )}
-
+            {winningNumber !== null && (
+  <View style={styles.resultTextContainer}>
+    <Text style={styles.resultLabel}>Result: </Text>
+    <View
+      style={[
+        styles.betBox,
+        { backgroundColor: getColorForNumber(winningNumber) },
+      ]}
+    >
+      <Text style={styles.betBoxText}>{winningNumber}</Text>
+    </View>
+  </View>
+)}
         {winAmount > 0 && (
           <Text style={[styles.winText, { position: 'absolute', top: '70%' }]}>
             {`You win: ${winAmount} coins!`}
           </Text>
         )}
-{/* 
-        {pointerNumber !== null && !isSpinning && (
-          <Text style={{ fontSize: 16, position: 'absolute', top: '80%' }}>
-            {`Pointer is at: ${pointerNumber}`}
-          </Text>
-        )} */}
       </View>
      <View style={styles.wheelContainer}>
   <Animated.View style={{ transform: [{ rotate: interpolatedRotation }] }}>
@@ -158,7 +173,9 @@ if (selectedBet === winningNum.toString()) {
   />
 </View>
 
+<View style={styles.tokenContainer}>
       <Text style={styles.tokenText}>Coins: {tokenCount.toFixed(2)}</Text>
+      </View>
 
       <TouchableOpacity
           onPress={spinRoulette}
@@ -192,18 +209,31 @@ if (selectedBet === winningNum.toString()) {
       />
 
 {selectedBet !== null && (
-  <Text style={styles.betText}>
-    {`Current Bet: ${betAmount} on `}
-    <Text style={{ color: selectedBet.toLowerCase() === 'red' ? 'red' : 'black' }}>
-      {selectedBet}
-    </Text>
-  </Text>
-)}
+  <View style={styles.betTextContainer}>
+    <Text style={styles.betLabel}>{`Current Bet: ${betAmount} on `}</Text>
+    <View
+      style={[
+        styles.betBox,
+        {
+          backgroundColor: getBetBoxColor(selectedBet),
+        },
+      ]}
+    >
+      <Text style={styles.betBoxText}>{selectedBet}</Text>
     </View>
+  </View>
+)}
+
+    </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    resizeMode: "cover", // Tämä varmistaa, että kuva kattaa koko taustan
+  },
   container: {
     flex: 1,
     alignItems: 'center',
@@ -234,28 +264,27 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
   },
+  tokenContainer: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
   tokenText: {
     fontSize: 16,
-    position: 'absolute',
-    top: 20,
-    right: 20,
+    color: '#fff',
   },
   betText: {
     position: 'absolute',
     fontSize: 16,
     marginTop: 10,
     bottom: 95,
-  },
-  resultText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 40,
+    color: '#fff',
   },
   winText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#4CAF50',
-    marginTop: 10,
+    color: '#0FFF50',
+    marginTop: 32.5,
   },
   outComeContainer: {
     marginBottom: 80,
@@ -263,12 +292,56 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'absolute',
     top: 45,
+    borderWidth: 3,
+    borderColor: '#000', // <-- Add this line for visible border
+    borderRadius: 10,
+    backgroundColor: '#5F0403', // Optional: makes it stand out
+    paddingBottom: 30, // Optional: adds spacing inside the border
+    paddingTop: 30, // Optional: adds spacing inside the border
+    paddingHorizontal: 80, // Optional: adds spacing inside the border
   },
   compImage: {
     position: 'absolute',
     width: 150, // Adjust size as needed
     height: 150,
     zIndex: 2,
+  },
+  betTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'absolute',
+    bottom: 95,
+  },
+  betLabel: {
+    fontSize: 16,
+    color: '#fff',
+    marginRight: 5,
+  },
+  betBox: {
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  betBoxText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  resultTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'absolute',
+    top: '60%',
+    marginTop: 5,
+  },
+  resultLabel: {
+    fontSize: 18,
+    color: '#fff',
+    fontWeight: 'bold',
+    marginRight: 5,
+    //marginTop: 5,
   },
 });
 
