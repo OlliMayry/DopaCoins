@@ -244,6 +244,7 @@ const styles = StyleSheet.create({
     height: 300,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop:20,
   },
   button: {
     padding: 10,
@@ -310,7 +311,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     position: 'absolute',
-    bottom: 95,
+    bottom: 80,
   },
   betLabel: {
     fontSize: 16,

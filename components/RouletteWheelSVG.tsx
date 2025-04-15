@@ -62,17 +62,18 @@ const RouletteWheelSVG = ({ size = 300, rotation, highlightedSector }: { size?: 
                   stroke={isHighlighted ? 'yellow' : 'none'}
                   strokeWidth={isHighlighted ? 3 : 0}
                 />
-                <SvgText
-                  x={labelX}
-                  y={labelY}
-                  fill="white"
-                  fontSize={size * 0.03}
-                  fontWeight="bold"
-                  textAnchor="middle"
-                  alignmentBaseline="middle"
-                >
-                  {num}
-                </SvgText>
+             <SvgText
+              x={labelX}
+              y={labelY}
+              fill="white"
+              fontSize={size * 0.03}
+              fontWeight="bold"
+              textAnchor="middle"
+              alignmentBaseline="middle"
+              transform={`rotate(${(midAngle * 180) / Math.PI + 90}, ${labelX}, ${labelY})`}
+            >
+              {num}
+            </SvgText>
               </G>
             );
           })}
