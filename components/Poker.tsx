@@ -79,7 +79,7 @@ const cardImages: { [key: string]: any } = {
   // Joker
   "Joker": require("../assets/Cards/Joker.png"),
   // Background image
-  "Background": require("../assets/Poker background.png"),
+  "Background": require("../assets/Poker/Poker background.png"),
 };
 
 const suits = ["Clubs", "Diamonds", "Hearts", "Spades"];

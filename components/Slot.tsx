@@ -17,8 +17,26 @@ const [isFlashing, setIsFlashing] = useState(false);
   // Symbols for the slot machine
   const slotSymbols = ['🍒', '🍋', '🍊', '🍉', '🍇', '🍀', '⭐', '7️⃣'];
 
-  // Get a random symbol
-  const getRandomSymbol = () => slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+  const symbolWeights: { [key: string]: number } = {
+    '🍒': 30, // Common
+    '🍋': 25,
+    '🍊': 20,
+    '🍉': 15,
+    '🍇': 7,
+    '🍀': 5,
+    '⭐': 2,
+    '7️⃣': 1, // Very rare
+  };
+  
+  const weightedSymbols = Object.entries(symbolWeights).flatMap(([symbol, weight]) =>
+    Array(weight).fill(symbol)
+  );
+  
+  const getRandomSymbol = () => {
+    const randomIndex = Math.floor(Math.random() * weightedSymbols.length);
+    return weightedSymbols[randomIndex];
+  };
+  
 
   // Generate random symbols for each reel (6 symbols per reel)
   const generateReels = () => {
@@ -34,6 +52,8 @@ const [isFlashing, setIsFlashing] = useState(false);
 
   // Reels animation using Animated.Value
   const reelAnims = [useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current];
+            // Flashing effect logic
+            const flashAnim = useRef(new Animated.Value(1)).current; // Start at full opacity
 
   // Function to handle the spin
   const spin = () => {
@@ -81,35 +101,43 @@ const [isFlashing, setIsFlashing] = useState(false);
 
   const checkWin = (...rows: string[][]) => {
     const multipliers: { [key: string]: number } = {
-      '🍒': 2, '🍋': 3, '🍊': 5, '🍉': 8, '🍇': 10, '🍀': 12, '⭐': 15, '7️⃣': 20
+      '🍒': 3,
+      '🍋': 4,
+      '🍊': 6,
+      '🍉': 9,
+      '🍇': 14,
+      '🍀': 18,
+      '⭐': 30,
+      '7️⃣': 60,
     };
+  
+    let totalWin = 0;
+    let winningPositions: Array<[number, number]> = [];
   
     const checkRow = (row: string[], positions: Array<[number, number]>) => {
       if (row[0] === row[1] && row[1] === row[2]) {
         const win = betAmount * (multipliers[row[0]] || 1);
-        setWinAmount(win);
-        setTokenCount((prev) => prev + win);
-  
-        // Tallenna voittosymbolien sijainnit oikein
-        setFlashingRow(positions);
-        setIsFlashing(true);
-        return true;
+        totalWin += win;
+        winningPositions.push(...positions);
       }
-      return false;
     };
   
-    // Tarkista rivit ja tallenna oikeat koordinaatit
-    if (checkRow(rows[0], [[0, 1], [1, 1], [2, 1]])) return; // Suora 1
-    if (checkRow(rows[1], [[0, 2], [1, 2], [2, 2]])) return; // Suora 2
-    if (checkRow(rows[2], [[0, 3], [1, 3], [2, 3]])) return; // Suora 3
-    if (checkRow(rows[3], [[0, 1], [1, 2], [2, 3]])) return; // Viisto ↘
-    if (checkRow(rows[4], [[0, 3], [1, 2], [2, 1]])) return; // Viisto ↙
+    checkRow(rows[0], [[0, 1], [1, 1], [2, 1]]); // Middle row
+    checkRow(rows[1], [[0, 2], [1, 2], [2, 2]]); // Bottom row
+    checkRow(rows[2], [[0, 3], [1, 3], [2, 3]]); // Lower row
+    checkRow(rows[3], [[0, 1], [1, 2], [2, 3]]); // Diagonal ↘
+    checkRow(rows[4], [[0, 3], [1, 2], [2, 1]]); // Diagonal ↙
   
-    setWinAmount(0);
-    setFlashingRow(null); // Ei vilkutusta jos ei voittoa
-  };
-          // Flashing effect logic
-          const flashAnim = useRef(new Animated.Value(1)).current; // Start at full opacity
+    if (totalWin > 0) {
+      setWinAmount(totalWin);
+      setTokenCount((prev) => prev + totalWin);
+      setFlashingRow(winningPositions);
+      setIsFlashing(true);
+    } else {
+      setWinAmount(0);
+      setFlashingRow(null);
+    }
+  };  
 
           useEffect(() => {
             if (!isFlashing) return;
@@ -201,16 +229,20 @@ const [isFlashing, setIsFlashing] = useState(false);
       </TouchableOpacity>
 
       <View style={styles.betControls}>
-        <TouchableOpacity
+      <TouchableOpacity
           onPress={() => setBetAmount((prev) => Math.max(1, prev - 1))}
-          style={styles.betButton}
+          style={[styles.betButton, isSpinning && { backgroundColor: '#BDC3C7' }]} // Grey out when spinning
+          disabled={isSpinning} // Disable while spinning
         >
           <Text style={styles.betText}>-</Text>
         </TouchableOpacity>
+
         <Text style={styles.betAmount}>Bet: {betAmount}</Text>
+
         <TouchableOpacity
           onPress={() => setBetAmount((prev) => prev + 1)}
-          style={styles.betButton}
+          style={[styles.betButton, isSpinning && { backgroundColor: '#BDC3C7' }]} // Grey out when spinning
+          disabled={isSpinning} // Disable while spinning
         >
           <Text style={styles.betText}>+</Text>
         </TouchableOpacity>
@@ -325,7 +357,7 @@ const styles = StyleSheet.create({
     color: '#27ae60',
     fontWeight: 'bold',
     position: 'absolute',
-    bottom: 80,
+    top: 80,
     textAlign: 'center',
     width: '100%',
   },

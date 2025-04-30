@@ -24,13 +24,15 @@ const Keno: React.FC<KenoProps> = ({ tokenCount, setTokenCount }) => {
   const [hitNumbers, setHitNumbers] = useState<number[]>([]);
   const [wonAmount, setWonAmount] = useState<number | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [animatedBalls, setAnimatedBalls] = useState<{ num: number, anim: Animated.Value }[]>([]);
   const [flyingBalls, setFlyingBalls] = useState<any[]>([]);
   const gridRefs = useRef<Record<number, View>>({});
   const ballIdRef = useRef(0);
-
+  const titleOpacity = useRef(new Animated.Value(1)).current;
+  const startButtonRef = useRef<View>(null)
+  const tableRef = useRef<View>(null);
 
   const toggleNumber = (num: number) => {
+    setWonAmount(null); 
     if (selectedNumbers.includes(num)) {
       // Unselecting a number -> Clear hits and misses
       setSelectedNumbers(prev => prev.filter(n => n !== num));
@@ -64,6 +66,8 @@ const Keno: React.FC<KenoProps> = ({ tokenCount, setTokenCount }) => {
     const revealed: number[] = [];
   
     for (let i = 0; i < newDrawNumbers.length; i++) {
+      // 💥 Fire cannonball 
+      fireCannonAt(newDrawNumbers[i]);
       await new Promise(resolve => setTimeout(resolve, 600)); // Reveal delay
       revealed.push(newDrawNumbers[i]);
       setDrawNumbers([...revealed]);
@@ -71,10 +75,8 @@ const Keno: React.FC<KenoProps> = ({ tokenCount, setTokenCount }) => {
       const hitsSoFar = selectedNumbers.filter(num => revealed.includes(num));
       setHitNumbers(hitsSoFar);
     
-       // 💥 Fire cannonball if this number is a hit
-    if (selectedNumbers.includes(newDrawNumbers[i])) {
-      fireCannonAt(newDrawNumbers[i]);
-    }
+       
+       // fireCannonAt(newDrawNumbers[i]);
   }
   
     const finalHits = selectedNumbers.filter(num => newDrawNumbers.includes(num));
@@ -95,9 +97,6 @@ const Keno: React.FC<KenoProps> = ({ tokenCount, setTokenCount }) => {
     setTokenCount(prev => prev + winnings * betAmount);
   };
 
-  const handleBetAmountChange = (amount: number) => {
-    setBetAmount(prev => Math.max(1, prev + amount));
-  };
   const payoutTable: Record<number, { hits: number; win: string }[]> = {
     2: [
       { hits: 2, win: "5x" },
@@ -120,119 +119,147 @@ const Keno: React.FC<KenoProps> = ({ tokenCount, setTokenCount }) => {
     ],
   }; 
   const clearBoard = () => {
+    setWonAmount(null); 
     setSelectedNumbers([]);
     setDrawNumbers([]);
     setHitNumbers([]);
   };
   const fireCannonAt = (targetNum: number) => {
-    const ref = gridRefs.current[targetNum];
-    if (!ref) return;
+    const targetRef = gridRefs.current[targetNum];
+    const table = tableRef.current;
+    if (!targetRef || !table) return;
   
-    ref.measureInWindow((x, y, width, height) => {
-      const startX = Dimensions.get('window').width / 2 - 10;
-      const startY = Dimensions.get('window').height - 50;
+    // 1) mittaa napin sijainti
+    table.measureInWindow((sx, sy, sWidth, sHeight) => {
+      const startX = sx + sWidth / 2 - 80 ; 
+      const startY = sy + sHeight / 2 - 120;
+     // console.log("Start:", startX, startY);
   
-      const translateX = new Animated.Value(startX);
-      const translateY = new Animated.Value(startY);
-      const id = ballIdRef.current++;
+      // 2) mittaa kohdenumeron sijainti
+      targetRef.measureInWindow((tx, ty, tw, th) => {
+        const endX = tx + tw / 2 - 80;
+        const endY = ty + th / 2 - 195;
+       // console.log("End:", endX, endY);
   
-      setFlyingBalls(prev => [...prev, { id, translateX, translateY }]);
+        const translateX = new Animated.Value(startX);
+        const translateY = new Animated.Value(startY);
+        const id = ballIdRef.current++;
   
-      Animated.parallel([
-        Animated.timing(translateX, {
-          toValue: x + width / 2 - 10,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.timing(translateY, {
-          toValue: y + height / 2 - 10,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        // Remove after impact
-        setFlyingBalls(prev => prev.filter(ball => ball.id !== id));
+        setFlyingBalls(prev => [...prev, { id, translateX, translateY }]);
+  
+        Animated.parallel([
+          Animated.timing(translateX, {
+            toValue: endX,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(translateY, {
+            toValue: endY,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ]).start(() => {
+          setFlyingBalls(prev => prev.filter(ball => ball.id !== id));
+        });
       });
     });
   };
 
+  useEffect(() => {
+    if (selectedNumbers.length >= 2) {
+      Animated.timing(titleOpacity, {
+        toValue: 0,
+        duration: 500, // 0.5 sekunnin häivytys
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(titleOpacity, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [selectedNumbers.length]);
 
   return (
     <View style={styles.container}>
       <View style={styles.tokenContainer}>
         <Text style={styles.tokenText}>Coins: {tokenCount.toFixed(2)}</Text>
       </View>
-
-      <Text style={styles.title}>Select 2-5 numbers</Text>
-
- <View style={styles.gameContainer}>
- {flyingBalls.map((ball) => (
-  <Animated.View
-    key={ball.id}
-    style={{
-      position: 'absolute',
-      width: 20,
-      height: 20,
-      borderRadius: 10,
-      backgroundColor: 'black',
-      transform: [
-        { translateX: ball.translateX },
-        { translateY: ball.translateY }
-      ],
-      zIndex: 999,  // Increase the zIndex significantly
-      // Adding debug border color to ensure visibility of the flying balls
-      borderWidth: 2,
-      borderColor: 'black',
-    }}
-  />
-))}
-  {/* Number Grid Section */}
-  <FlatList
-  data={Array.from({ length: 20 }, (_, i) => i + 1)}
-  numColumns={4}
-  renderItem={({ item }) => (
-    <View
-      ref={ref => {
-        if (ref) {
-          gridRefs.current[item] = ref;
-        }
-      }}
-    >
-      <TouchableOpacity
-        style={[
-          styles.numberButton,
-          selectedNumbers.includes(item) ? styles.selected : {},
-          drawNumbers.includes(item) && hitNumbers.includes(item) ? styles.hit :
-          drawNumbers.includes(item) ? styles.missed : {}
-        ]}
-        onPress={() => !isDrawing && toggleNumber(item)}
-        disabled={isDrawing}
-      >
-        <Text style={styles.numberText}>{item}</Text>
-      </TouchableOpacity>
-    </View>
-  )}
-  keyExtractor={(item) => item.toString()}
-/>
-
-
-{/* Payout Table on the Right */}
-<View style={styles.payoutTable}>
-    <Text style={styles.tableHeader}>Hits | Win</Text>
-    {selectedNumbers.length >= 2 && payoutTable[selectedNumbers.length]?.map((row, index) => (
-      <Text key={index} style={styles.tableRow}>{row.hits} | {row.win}</Text>
-    ))}
-  </View>
-  </View>
-
-  <View style={styles.resultContainer}>
+      <View style={styles.resultContainer}>
         {wonAmount !== null && wonAmount > 0 ? (
           <Text style={styles.wonText}>{`Win: ${wonAmount.toFixed(2)}`}</Text>
         ) : null}
       </View>
 
-   {/*    <View style={styles.controls}>   */}
+      <Animated.Text style={[styles.title, { opacity: titleOpacity }]}>
+        Select 2-5 numbers
+      </Animated.Text>
+
+      <View style={styles.gameContainer}>
+        <View ref={tableRef} style={styles.poyta}>
+        {flyingBalls.map((ball) => (
+          <Animated.View
+            key={ball.id}
+            style={{
+              position: 'absolute',
+              left: 0,         // ➞ Lisää nämä
+              top: 0,          // ➞ Lisää nämä
+              width: 20,
+              height: 20,
+              borderRadius: 10,
+              backgroundColor: 'black',
+              transform: [
+                { translateX: ball.translateX },
+                { translateY: ball.translateY }
+              ],
+              zIndex: 999,  // Increase the zIndex significantly
+              // Adding debug border color to ensure visibility of the flying balls
+              borderWidth: 2,
+              borderColor: 'black',
+            }}
+          />
+        ))}
+        {/* Number Grid Section */}
+        <FlatList
+        data={Array.from({ length: 20 }, (_, i) => i + 1)}
+        numColumns={4}
+        renderItem={({ item }) => (
+          <View
+            ref={ref => {
+              if (ref) {
+                gridRefs.current[item] = ref;
+              }
+            }}
+          >
+            <TouchableOpacity
+              style={[
+                styles.numberButton,
+                selectedNumbers.includes(item) ? styles.selected : {},
+                drawNumbers.includes(item) && hitNumbers.includes(item) ? styles.hit :
+                drawNumbers.includes(item) ? styles.missed : {}
+              ]}
+              onPress={() => !isDrawing && toggleNumber(item)}
+              disabled={isDrawing}
+            >
+              <Text style={styles.numberText}>{item}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        keyExtractor={(item) => item.toString()}
+        />
+        </View>
+
+        {/* Payout Table on the Right */}
+        <View style={styles.payoutTable}>
+          <Text style={styles.tableHeader}>Hits | Win</Text>
+          {selectedNumbers.length >= 2 && payoutTable[selectedNumbers.length]?.map((row, index) => (
+            <Text key={index} style={styles.tableRow}>{row.hits} | {row.win}</Text>
+          ))}
+        </View>
+      </View>
       <TouchableOpacity
+        ref={tableRef}
         onPress={startGame}
         style={[styles.startButton, selectedNumbers.length < 2 || isDrawing ? styles.disabledButton : {}]}
         disabled={selectedNumbers.length < 2 || isDrawing}
@@ -250,16 +277,25 @@ const Keno: React.FC<KenoProps> = ({ tokenCount, setTokenCount }) => {
       </TouchableOpacity>
 
       <View style={styles.betControls}>
-        <TouchableOpacity onPress={() => handleBetAmountChange(-1)} style={styles.betButton}>
-          <Text style={styles.betText}>-</Text>
-        </TouchableOpacity>
-        <Text style={styles.betAmount}>Bet: {betAmount}</Text>
-        <TouchableOpacity onPress={() => handleBetAmountChange(1)} style={styles.betButton}>
-          <Text style={styles.betText}>+</Text>
-        </TouchableOpacity>
+        <TouchableOpacity
+            onPress={() => setBetAmount((prev) => Math.max(1, prev - 1))}
+            style={[styles.betButton, isDrawing && { backgroundColor: '#BDC3C7' }]} // Grey out when spinning
+            disabled={isDrawing} // Disable while spinning
+          >
+            <Text style={styles.betText}>-</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.betAmount}>Bet: {betAmount}</Text>
+
+          <TouchableOpacity
+            onPress={() => setBetAmount((prev) => prev + 1)}
+            style={[styles.betButton, isDrawing && { backgroundColor: '#BDC3C7' }]} // Grey out when spinning
+            disabled={isDrawing} // Disable while spinning
+          >
+            <Text style={styles.betText}>+</Text>
+          </TouchableOpacity>
       </View>
-      </View>
-  /*   </View> */
+    </View>
   );
 };
 
@@ -279,8 +315,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    marginTop: 100, // Reduced the margin to move the title closer to the buttons
-    marginBottom: 5,
+   // marginTop: 100,  Reduced the margin to move the title closer to the buttons
+    marginBottom: 20,
   },
   numberButton: {
     width: 40,
@@ -305,7 +341,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
-    marginTop: 5,
+    marginTop: 20,
   },
   disabledButton: {
     backgroundColor: '#bdc3c7', // Grey out button
@@ -341,19 +377,15 @@ const styles = StyleSheet.create({
     minHeight: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 10, // Adjusted for the gap between result and bet controls
-    marginBottom: 10,
-  },
-  resultText: {
-    fontSize: 20,
-    color: '#f39c12',
-    fontWeight: 'bold',
+   position: 'relative',
+   top: 60, // Adjusted to position the result container above the bet controls
+   marginTop: 20,
+    marginBottom: 20,
   },
   wonText: {
     fontSize: 20,
     color: '#4CAF50',
     fontWeight: 'bold',
-   // marginBottom: 10,
   },
   betControls: {
     flexDirection: 'row',
@@ -392,12 +424,15 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginLeft: 145,  // Adjust this value to shift the container to the left
     overflow: 'visible', 
-   // top: 35,
+  },
+  poyta: {
+   // borderColor: '#bdc3c7',
+   // borderWidth: 1,
   },
   payoutTable: {
     width: 80, // Fixed width
     minHeight: 100, // Prevent shrinking
-    backgroundColor: "#ecf0f1",
+    backgroundColor: "#6e7275", //#bdc3c7
     padding: 10,
     borderRadius: 8,
     alignItems: "center",
@@ -408,14 +443,13 @@ const styles = StyleSheet.create({
   tableHeader: {
     fontWeight: "bold",
     marginBottom: 5,
+    color: "#ffffff",
   },
   tableRow: {
     fontSize: 14,
     marginBottom: 3,
+    color: "#ffffff",
   },  
- /*  controls: {
-bottom: 30,
-  }, */
 });
 
 export default Keno;

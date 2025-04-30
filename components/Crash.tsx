@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     color: '#4CAF50',
     fontWeight: 'bold',
     position: 'absolute',
-    bottom: 260,
+    bottom: 240,
   },
   betControls: {
     flexDirection: 'row',

@@ -20,7 +20,7 @@ const coinImages: { [key: string]: any } = {
   // Default
   "Default": require("../assets/Coins/default.png"),
   // Default
-  "Background": require("../assets/Coins/Background2.png"),
+  "Background": require("../assets/Coins/Background1.png"),
 };
 
 const Coin: React.FC<CoinProps> = ({ navigation, tokenCount, setTokenCount }) => {
@@ -160,87 +160,87 @@ const Coin: React.FC<CoinProps> = ({ navigation, tokenCount, setTokenCount }) =>
   return (
     <ImageBackground source={coinImages["Background"]} style={styles.background}>
     <View style={styles.container}>
-<View style={styles.coinContainer}>
-  <Animated.View style={[styles.front, { transform: [{ rotateY: frontSpin }] }]}>
-    <Animated.Image
-      source={
-        isAnimating || !side
-          ? require('../assets/Coins/default.png')
-          : coinImages[side]
-      }
-      style={[
-    styles.coinImage,
-    side === 'Edge' && styles.edgeStyle // 👈 tämä rivi
-  ]}
-  resizeMode="contain"
-    />
-  </Animated.View>
+      <View style={styles.coinContainer}>
+        <Animated.View style={[styles.front, { transform: [{ rotateY: frontSpin }] }]}>
+          <Animated.Image
+            source={
+              isAnimating || !side
+                ? require('../assets/Coins/default.png')
+                : coinImages[side]
+            }
+            style={[
+          styles.coinImage,
+          side === 'Edge' && styles.edgeStyle // 👈 tämä rivi
+        ]}
+        resizeMode="contain"
+          />
+        </Animated.View>
 
-  <Animated.View style={[styles.back, { transform: [{ rotateY: backSpin }] }]}>
-    <Animated.Image
-      source={
-        isAnimating || !side
-          ? require('../assets/Coins/default.png')
-          : coinImages[side]
-      }
-      style={[
-        styles.coinImage,
-        side === 'Edge' && styles.edgeStyle // 👈 tämä rivi
-      ]}
-      resizeMode="contain"
-        />
-  </Animated.View>
-</View>
+        <Animated.View style={[styles.back, { transform: [{ rotateY: backSpin }] }]}>
+          <Animated.Image
+            source={
+              isAnimating || !side
+                ? require('../assets/Coins/default.png')
+                : coinImages[side]
+            }
+            style={[
+              styles.coinImage,
+              side === 'Edge' && styles.edgeStyle // 👈 tämä rivi
+            ]}
+            resizeMode="contain"
+              />
+        </Animated.View>
+      </View>
 
-      <View style={styles.results}>
+  <View style={styles.results}>
         <Text style={{ color: '#ffff', fontWeight: 'bold' }}>{`History:`}</Text>
 
-          {/* Heads Text and Image */}
-  <View style={styles.historyItem}><Image source={coinImages["Heads"]} style={styles.resultImage} />
-    <Text style={{ color: '#ffff' }}>{`Heads: ${headsCount}`}</Text>
-    
-  </View>
-  
-  {/* Tails Text and Image */}
-  <View style={styles.historyItem}><Image source={coinImages["Tails"]} style={styles.resultImage} />
-    <Text style={{ color: '#ffff' }}>{`Tails: ${tailsCount}`}</Text>
-    
-  </View>
-
-  {/* Edge Text and Image */}
-  <View style={styles.historyItem}><Image source={coinImages["Edge"]} style={styles.resultImage} />
-  <Text style={{ color: '#ffff' }}>{`Edge: ${standingCount}`}</Text>
-  
-  </View>
-        <TouchableOpacity onPress={resetResults} style={styles.buttonClear}>
-        <Text style={styles.buttonText}>Reset</Text>
-      </TouchableOpacity>
+                {/* Heads Text and Image */}
+        <View style={styles.historyItem}><Image source={coinImages["Heads"]} style={styles.resultImage} />
+          <Text style={{ color: '#ffff' }}>{`Heads: ${headsCount}`}</Text>
+        
+      </View>
+      
+      {/* Tails Text and Image */}
+      <View style={styles.historyItem}><Image source={coinImages["Tails"]} style={styles.resultImage} />
+        <Text style={{ color: '#ffff' }}>{`Tails: ${tailsCount}`}</Text>
+        
       </View>
 
-      <View style={styles.tokenContainer}>
+      {/* Edge Text and Image */}
+      <View style={styles.historyItem}><Image source={coinImages["Edge"]} style={styles.resultImage} />
+      <Text style={{ color: '#ffff' }}>{`Edge: ${standingCount}`}</Text>
+      
+      </View>
+            <TouchableOpacity onPress={resetResults} style={styles.buttonClear}>
+            <Text style={styles.buttonText}>Reset</Text>
+          </TouchableOpacity>
+  </View>
+
+  <View style={styles.tokenContainer}>
         <Text style={styles.tokenText}>Coins: {tokenCount.toFixed(2)}</Text>
-      </View>
+  </View>
 
-      <View style={styles.conaContainer}>
-  <TouchableOpacity
-    onPress={flipCoin}
-    style={[
-      styles.button,
-      (!selectedColor || isAnimating) && styles.disabledButton
-    ]}
-    disabled={!selectedColor || isAnimating}
-  >
-    <Text style={styles.buttonText}>Flip</Text>
-  </TouchableOpacity>
+  <View style={styles.conaContainer}>
+        <TouchableOpacity
+          onPress={flipCoin}
+          style={[
+            styles.button,
+            (!selectedColor || isAnimating) && styles.disabledButton
+          ]}
+          disabled={!selectedColor || isAnimating}
+        >
+          <Text style={styles.buttonText}>Flip</Text>
+        </TouchableOpacity>
 
-  <TouchableOpacity
-    onPress={() => setBetModalVisible(true)}
-    style={[styles.button1, isAnimating && styles.disabledButton]}
-    disabled={isAnimating}
-  >
-    <Text style={styles.buttonText}>Bet</Text>
-  </TouchableOpacity>
-</View>
+        <TouchableOpacity
+          onPress={() => setBetModalVisible(true)}
+          style={[styles.button1, isAnimating && styles.disabledButton]}
+          disabled={isAnimating}
+        >
+          <Text style={styles.buttonText}>Bet</Text>
+        </TouchableOpacity>
+  </View>
 
       <BetModal
         isVisible={betModalVisible}
@@ -254,10 +254,9 @@ const Coin: React.FC<CoinProps> = ({ navigation, tokenCount, setTokenCount }) =>
           <Text style={styles.warningText}>Not enough coins. Change your bet or earn more.</Text>
         </View>
       )}
-
       <View style={styles.outcomeContainer}>
+      {showWinAmount && <Text style={styles.winAmountText}>{winAmount > 0 ? `Win: ${winAmount}` : ''}</Text>}
         {side && !isAnimating && <Text style={styles.resultText}>{`Result: ${side}`}</Text>}
-        {showWinAmount && <Text style={styles.winAmountText}>{winAmount > 0 ? `Win: ${winAmount}` : ''}</Text>}
       </View>
 
       <View style={styles.betContainer}>
@@ -287,6 +286,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+    top: 20,
   },
   front: {
     width: 100,
@@ -310,6 +310,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#007bff',
     borderRadius: 5,
     marginTop: 15,
+    top: 20,
   },
   button1: {
     padding: 10,
@@ -317,6 +318,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginTop: 15,
     marginBottom: 10,
+    top: 20,
   },
   buttonText: {
     color: '#fff',
@@ -324,6 +326,7 @@ const styles = StyleSheet.create({
   resultText: {
     fontSize: 18,
     color: '#fff',
+    marginTop: 10,
   },
   results: {
     marginTop: 10,
@@ -352,6 +355,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
     position: 'absolute',
+    top: 20,
   },
   warningContainer: {
     position: 'absolute',
@@ -372,7 +376,7 @@ const styles = StyleSheet.create({
   },
   outcomeContainer: {
     position: 'absolute',
-    bottom: 145,
+    top: 105,
     left: 0,
     right: 0,
     alignItems: 'center',
@@ -383,7 +387,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#4CAF50',
     fontWeight: 'bold',
-    marginTop: 10,
     //bottom: 360,
   },
   buttonClear: {
@@ -418,7 +421,7 @@ const styles = StyleSheet.create({
   },
   conaContainer:{
     marginBottom: 20,
-  }
+  },
 });
 
 export default Coin;

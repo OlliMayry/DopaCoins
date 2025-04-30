@@ -76,7 +76,7 @@ const cardImages: { [key: string]: any } = {
   // Korttipakan selkäpuoli
   "Deck-Back": require("../assets/Cards/CardStack.png"),
   //Background image
-  "Background": require("../assets/Blackjack background.png"),
+  "Background": require("../assets/Blackjack/Blackjack background.png"),
 };
 
 // getCardImage-funktio

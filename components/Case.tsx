@@ -22,7 +22,7 @@ const caseImages: { [key: string]: any } = {
  "3x": require("../assets/Cases/Dessu.png"),
  "1x": require("../assets/Cases/RK.png"),
  "0x": require("../assets/Cases/Feather.png"),
-  "Background": require("../assets/Case BG1.png"),
+  "Background": require("../assets/Cases/Case BG1.png"),
   "Case": require("../assets/Cases/Ceissi.png"),
 }
 
@@ -162,7 +162,7 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
       {/* You Win Text */}
       {winAmount !== null && winAmount > 0 && (
       <Text style={[styles.winText, { position: 'absolute', bottom: 120 }]}>
-        {`You Win: ${winAmount}`}
+        {`Win: ${winAmount}`}
       </Text>
     )}
 
@@ -215,30 +215,30 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
       </TouchableOpacity>
 
       <View style={styles.betControls}>
-  <TouchableOpacity
-    onPress={() => setBetAmount((prev) => Math.max(1, prev - 1))}
-    style={[
-      styles.betButton,
-      isRolling && styles.betButtonDisabled
-    ]}
-    disabled={isRolling}
-  >
-    <Text style={styles.betText}>-</Text>
-  </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setBetAmount((prev) => Math.max(1, prev - 1))}
+          style={[
+            styles.betButton,
+            isRolling && styles.betButtonDisabled
+          ]}
+          disabled={isRolling}
+        >
+          <Text style={styles.betText}>-</Text>
+        </TouchableOpacity>
 
-  <Text style={styles.betAmount}>Bet: {betAmount}</Text>
+      <Text style={styles.betAmount}>Bet: {betAmount}</Text>
 
-  <TouchableOpacity
-    onPress={() => setBetAmount((prev) => prev + 1)}
-    style={[
-      styles.betButton,
-      isRolling && styles.betButtonDisabled
-    ]}
-    disabled={isRolling}
-  >
-    <Text style={styles.betText}>+</Text>
-  </TouchableOpacity>
-</View>
+        <TouchableOpacity
+          onPress={() => setBetAmount((prev) => prev + 1)}
+          style={[
+            styles.betButton,
+            isRolling && styles.betButtonDisabled
+          ]}
+          disabled={isRolling}
+        >
+          <Text style={styles.betText}>+</Text>
+        </TouchableOpacity>
+      </View>
 </View>    
     </View>
     </ImageBackground>

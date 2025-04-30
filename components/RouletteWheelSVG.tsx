@@ -24,9 +24,7 @@ const RouletteWheelSVG = ({ size = 300, rotation, highlightedSector }: { size?: 
   const radius = size / 2;
   const angle = (2 * Math.PI) / numbers.length;
   const innerCircleRadius = size * 0.35; // Radius for the inner circle
-  
-  // Change this value to adjust how many sectors you want in the inner circle.
-  const numInnerSectors = 37;
+  const numInnerSectors = 37;  // Change this value to adjust how many sectors you want in the inner circle.
 
   return (
     <View>
@@ -52,15 +50,16 @@ const RouletteWheelSVG = ({ size = 300, rotation, highlightedSector }: { size?: 
             const midAngle = startAngle + angle / 2;
             const labelX = radius + (radius * 0.85) * Math.cos(midAngle);
             const labelY = radius + (radius * 0.85) * Math.sin(midAngle);
-            const isHighlighted = highlightedSector === index;
+           // const isHighlighted = highlightedSector === index;
 
             return (
               <G key={num}>
                 <Path
                   d={pathData}
                   fill={getColor(num)}
-                  stroke={isHighlighted ? 'yellow' : 'none'}
-                  strokeWidth={isHighlighted ? 3 : 0}
+                  stroke="none"
+                  //stroke={isHighlighted ? 'yellow' : 'none'}
+                  //strokeWidth={isHighlighted ? 3 : 0}
                 />
              <SvgText
               x={labelX}
@@ -78,6 +77,44 @@ const RouletteWheelSVG = ({ size = 300, rotation, highlightedSector }: { size?: 
             );
           })}
         </G>
+        
+        <Circle
+          cx={radius}
+          cy={radius}
+          r={radius - 1.5}
+          fill="none"
+          stroke="#999999"
+          strokeWidth={3}
+        />
+
+        {/* Highlight-reuna uloimman kehän päälle */}
+{highlightedSector !== null && (() => {
+  const startAngle = highlightedSector * angle;
+  const endAngle = startAngle + angle;
+
+  const outerX1 = radius + radius * Math.cos(startAngle);
+  const outerY1 = radius + radius * Math.sin(startAngle);
+  const outerX2 = radius + radius * Math.cos(endAngle);
+  const outerY2 = radius + radius * Math.sin(endAngle);
+  const largeArc = angle > Math.PI ? 1 : 0;
+
+  const pathData = `
+    M ${radius} ${radius}
+    L ${outerX1} ${outerY1}
+    A ${radius} ${radius} 0 ${largeArc} 1 ${outerX2} ${outerY2}
+    Z
+  `;
+
+  return (
+    <Path
+      d={pathData}
+      fill="none"
+      stroke="yellow"
+      strokeWidth={3}
+    />
+  );
+})()}
+
         
         {/* Inner circle */}
         <Circle
@@ -105,6 +142,27 @@ const RouletteWheelSVG = ({ size = 300, rotation, highlightedSector }: { size?: 
           );
         })}
         
+ {/* Pallo – siirretty oikein silmukan ulkopuolelle */}
+ {highlightedSector !== null && (() => {
+          const midAngle = (highlightedSector + 0.5) * angle;
+          const ballRadius = size * 0.0175;
+          const ballDistanceFromCenter = radius * 0.63;
+
+          const ballX = radius + ballDistanceFromCenter * Math.cos(midAngle);
+          const ballY = radius + ballDistanceFromCenter * Math.sin(midAngle);
+
+          return (
+            <Circle
+              cx={ballX}
+              cy={ballY}
+              r={ballRadius}
+              fill="#FFFFFF"
+              stroke="#000"
+              strokeWidth={1}
+            />
+          );
+        })()}
+
       </Svg>
       
       {/* Overlay the wheel image in center */}

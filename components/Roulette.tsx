@@ -17,7 +17,7 @@ interface RouletteProps {
 const rouletteImages: { [key: string]: any } = {
   "comp": require("../assets/Roulette/comp1.png"),
   "wheel": require("../assets/Roulette/Wheel.png"),
-  "background": require("../assets/Roulette/bg.png"),
+  "background": require("../assets/Roulette/bg2.png"),
 };
 
 const Roulette: React.FC<RouletteProps> = ({ tokenCount, setTokenCount }) => {
@@ -156,7 +156,7 @@ if (selectedBet === winningNum.toString()) {
 )}
         {winAmount > 0 && (
           <Text style={[styles.winText, { position: 'absolute', top: '70%' }]}>
-            {`You win: ${winAmount} coins!`}
+            {`Win: ${winAmount}`}
           </Text>
         )}
       </View>
