@@ -255,13 +255,13 @@ const Coin: React.FC<CoinProps> = ({ navigation, tokenCount, setTokenCount }) =>
         </View>
       )}
       <View style={styles.outcomeContainer}>
-      {showWinAmount && <Text style={styles.winAmountText}>{winAmount > 0 ? `Win: ${winAmount}` : ''}</Text>}
+      {showWinAmount && <Text style={styles.winAmountText}>{winAmount > 0 ? `Win: ${winAmount.toFixed(2)}` : ''}</Text>}
         {side && !isAnimating && <Text style={styles.resultText}>{`Result: ${side}`}</Text>}
       </View>
 
       <View style={styles.betContainer}>
         {selectedColor && (
-          <Text style={styles.betText}>{`Current Bet: "${betAmount}" on ${selectedColor}`}</Text>
+          <Text style={styles.betText}>{`Current Bet: ${betAmount.toFixed(2)} on ${selectedColor}`}</Text>
         )}
       </View>
     </View>
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
   },
   winAmountText: {
     fontSize: 18,
-    color: '#4CAF50',
+    color: '#0FFF50', //'#4CAF50'
     fontWeight: 'bold',
     //bottom: 360,
   },

@@ -16,9 +16,9 @@ const SPIN_DURATION = 4000;
 
 const caseImages: { [key: string]: any } = {
  // Knife image
- "50x": require("../assets/Cases/Knife.png"),
+ "50x": require("../assets/Cases/Knife1.png"),
  "25x": require("../assets/Cases/AWP1.png"),
- "10x": require("../assets/Cases/AK_R.png"),
+ "10x": require("../assets/Cases/AK1.png"),
  "3x": require("../assets/Cases/Dessu.png"),
  "1x": require("../assets/Cases/RK.png"),
  "0x": require("../assets/Cases/Feather.png"),
@@ -208,7 +208,7 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
 
       <TouchableOpacity 
           onPress={openCaseAndSpin} 
-          style={[styles.caseBox, { backgroundColor: isRolling ? '#7f8c8d' : '#3498db' }]} 
+          style={[styles.caseBox, { backgroundColor: isRolling ? '#7f8c8d' : '#007bff' }]} 
           disabled={isRolling}
         >
           <Text style={styles.caseText}>Open Case</Text>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
 import RunkoSVG from '../components/RunkoSVG';
 import Wheel1SVG from '../components/Wheel1SVG';
+import MovingRoad from '../components/MovingRoad';
 
 interface CrashProps {
   tokenCount: number;
@@ -71,28 +72,75 @@ const Crash: React.FC<CrashProps> = ({ tokenCount, setTokenCount }) => {
   const [crashMultiplier, setCrashMultiplier] = useState<number | null>(null);
   const [cashOutMultiplier, setCashOutMultiplier] = useState<number | null>(null);
   const [wheelRotation] = useState(new Animated.Value(0));
-  
+  const [tiltValue] = useState(new Animated.Value(0));
 
-useEffect(() => {
+  useEffect(() => {
   if (isPlaying) {
+    // Wheel rotation continues as long as isPlaying is true
     Animated.loop(
       Animated.timing(wheelRotation, {
         toValue: 1,
-        duration: 1000, // pyörimisnopeus
+        duration: 500,
         useNativeDriver: true,
         easing: Easing.linear,
       })
     ).start();
   } else {
-    wheelRotation.stopAnimation(); // pysäytetään
-    wheelRotation.setValue(0);     // nollataan
+    wheelRotation.stopAnimation();
+    wheelRotation.setValue(0);  // Stop wheel rotation when not playing
   }
-}, [isPlaying]);
+}, [isPlaying]);  // Trigger this when isPlaying state changes
+
+useEffect(() => {
+  if (isRolling) {
+    // Tilt animation happens when isRolling is true
+    Animated.timing(tiltValue, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+      easing: Easing.out(Easing.quad),
+    }).start();
+  } else {
+    // Reset tilt when not rolling
+    Animated.timing(tiltValue, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+      easing: Easing.in(Easing.quad),
+    }).start();
+  }
+}, [isRolling]);  // Trigger this when isRolling state changes
 
 const spin = wheelRotation.interpolate({
   inputRange: [0, 1],
   outputRange: ['0deg', '360deg'],
 });
+
+const tiltInterpolation = tiltValue.interpolate({
+  inputRange: [0, 1],
+  outputRange: ['0deg', '-50deg'], // negatiivinen = oikea puoli nousee
+});
+
+const liftInterpolation = tiltValue.interpolate({
+  inputRange: [0, 1],
+  outputRange: [0, -37.5], // nostetaan hieman ylöspäin
+});
+
+const shiftInterpolation = tiltValue.interpolate({
+  inputRange: [0, 1],
+  outputRange: [0, -62.5], // siirretään hieman vasemmalle, jotta keula näyttäisi kiertyvän oikeasta päästä
+});
+
+const frontWheelX = tiltValue.interpolate({
+  inputRange: [0, 1],
+  outputRange: [0, -52.5], // Eturengas menee enemmän oikealle
+});
+
+const frontWheelY = tiltValue.interpolate({
+  inputRange: [0, 1],
+  outputRange: [0, -115],  // Eturengas nousee x yksikköä korkeammalle
+});
+
 
 
   useEffect(() => {
@@ -152,16 +200,41 @@ const spin = wheelRotation.interpolate({
       <Text style={styles.maxMultiplierText}>Max Win 100x</Text>
 
       <View style={styles.svgContainer}>
-      <RunkoSVG width={360} height={250} style={styles.runko} />
+            <Animated.View
+        style={[
+          styles.runko,
+          {
+            transform: [
+              { translateY: liftInterpolation },
+              { translateX: shiftInterpolation },
+              { rotate: tiltInterpolation },
+            ],
+          },
+        ]}
+      >
+        <RunkoSVG width={360} height={250} />
+      </Animated.View>
       <Animated.View style={[styles.wheel, { transform: [{ rotate: spin }] }]}>
         <Wheel1SVG width={85} height={185} />
       </Animated.View>
-      <Animated.View style={[styles.wheel2, { transform: [{ rotate: spin }] }]}>
-        <Wheel1SVG width={85} height={185} />
-      </Animated.View>
+      <Animated.View
+  style={[
+    styles.wheel2,
+    {
+      transform: [
+        { translateY: frontWheelY },
+        { translateX: frontWheelX },
+        { rotate: spin },
+      ],
+    },
+  ]}
+>
+  <Wheel1SVG width={85} height={185} />
+</Animated.View>
+      <MovingRoad isPlaying={isPlaying} />
       </View>
 
-
+<View style={styles.info}>
       {isPlaying ? (
         <Text style={styles.rollingText}>Rolling...</Text>
       ) : (
@@ -210,6 +283,7 @@ const spin = wheelRotation.interpolate({
         >
           <Text style={styles.betText}>+</Text>
         </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -276,13 +350,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     //marginTop: 10,
+   // top: 10,
   },
   cashOutText: {
     fontSize: 20,
     color: '#4CAF50',
     fontWeight: 'bold',
     position: 'absolute',
-    bottom: 240,
+    bottom: 440,
   },
   betControls: {
     flexDirection: 'row',
@@ -312,7 +387,7 @@ const styles = StyleSheet.create({
     color: '#333', 
     fontWeight: 'bold',
     //marginTop: 10,
-    top:40,
+    top:5,
   },
   svgContainer: {
     width: 360,
@@ -337,6 +412,11 @@ const styles = StyleSheet.create({
     zIndex: 1, // ylempi (tai laita pienemmäksi jos haluat taakse)
     right: 61, // säädä sijainti haluamaksesi
     top: 81.5,
+  },
+  info:{
+bottom: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

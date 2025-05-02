@@ -71,11 +71,11 @@ const cardImages: { [key: string]: any } = {
   "Spades-K": require("../assets/Cards/Spades/K.png"),
 
   // Kortin selkäpuoli
-  "Card-Back": require("../assets/Cards/Card around.png"),
+  "Card-Back": require("../assets/Cards/CardAround.png"),
   // Korttipakan selkäpuoli
   "Deck-Back": require("../assets/Cards/CardStack.png"),
   // Kahden kortin selkäpuoli
-  "Double-Back": require("../assets/Cards/Double around.png"),
+  "Double-Back": require("../assets/Cards/DoubleAround.png"),
   // Joker
   "Joker": require("../assets/Cards/Joker.png"),
   // Background image
@@ -291,14 +291,18 @@ const handleDoubleCardSelection = (selectedIndex: number) => {
           {/* Show either the doubling view or the normal game */}
           {isDoubling ? (
       <View style={styles.doubleContainer}>
-          <Text style={styles.instructionText}>
-        {revealedAll
-          ? winAmount > 0
-            ? `Current win: ${winAmount.toFixed(2)} coins` // If winAmount > 0, display current win
-            : handType // If winAmount is 0 (failure), display the hand type (e.g., "Double Fail!")
-          : `You win ${(winAmount * 2).toFixed(2)} coins if you find a card of higher value` // If still in selecting phase, show instruction
-        }
-          </Text>
+         <Text
+  style={[
+    styles.instructionText,
+    revealedAll && winAmount > 0 && styles.winTextGreen
+  ]}
+>
+  {revealedAll
+    ? winAmount > 0
+      ? `Current win: ${winAmount.toFixed(2)} coins`
+      : handType
+    : `Win ${(winAmount * 2).toFixed(2)} coins with a higher card`}
+</Text>
           <View style={styles.rowContainer}>
             {/* Always show the base card face-up */}
             <Image source={cardImages[doubleCards[0]]} style={styles.cardImage} />
@@ -479,6 +483,7 @@ const handleDoubleCardSelection = (selectedIndex: number) => {
     buttonText: {
       color: "white",
       fontWeight: "bold",
+      textAlign: "center",
     },
     cardContainer: {
       flexDirection: "row",
@@ -578,6 +583,7 @@ const handleDoubleCardSelection = (selectedIndex: number) => {
     doubleOptions: {
       flexDirection: 'row',
       justifyContent: 'space-between',
+      gap: 20, // lisää väli nappeihin
       width: '80%',
       marginTop: 20,
     },
@@ -598,7 +604,13 @@ const handleDoubleCardSelection = (selectedIndex: number) => {
     instructionText: {
       fontSize: 18,
       color: '#fff',
-     // marginBottom: 10,
+      top: 10,
+    },
+    winTextGreen: {
+      color: '#0FFF50',
+      fontWeight: "bold",
+      fontSize: 18,
+      textAlign: "center",
     },
   });
  

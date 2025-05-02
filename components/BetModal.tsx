@@ -13,7 +13,8 @@ const BetModal: React.FC<BetModalProps> = ({ isVisible, onClose, onPlaceBet, onC
     const [betAmount, setBetAmount] = useState('');
 
     const handlePlaceBet = () => {
-        const amount = parseInt(betAmount, 10);
+        const sanitizedInput = betAmount.replace(',', '.'); // Muuta pilkku pisteeksi
+        const amount = parseFloat(sanitizedInput);
         if (isNaN(amount) || amount <= 0) {
             // Display an error message or handle invalid input
             return;
@@ -60,7 +61,22 @@ const BetModal: React.FC<BetModalProps> = ({ isVisible, onClose, onPlaceBet, onC
                         placeholder="Enter Bet Amount"
                         keyboardType="numeric"
                         value={betAmount}
-                        onChangeText={(text) => setBetAmount(text)}
+                        onChangeText={(text) => {
+                            // Salli vain numerot ja yksi desimaalierotin (piste tai pilkku)
+                            let sanitized = text.replace(/[^0-9.,]/g, '');
+                        
+                            // Varmista, että vain yksi piste tai pilkku sallitaan
+                            const parts = sanitized.split(/[.,]/);
+                        
+                            if (parts.length > 2) {
+                                // Liikaa desimaalierottimia, poistetaan ylimääräiset
+                                sanitized = parts[0] + '.' + parts.slice(1).join('');
+                            } else {
+                                sanitized = sanitized.replace(',', '.'); // Muuta pilkku pisteeksi
+                            }
+                        
+                            setBetAmount(sanitized);
+                        }}
                     />
                     <TouchableOpacity style={styles.placeBetButton} onPress={handlePlaceBet}>
                         <Text style={styles.placeBetButtonText}>Place Bet</Text>

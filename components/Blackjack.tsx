@@ -72,7 +72,7 @@ const cardImages: { [key: string]: any } = {
   "Spades-K": require("../assets/Cards/Spades/K.png"),
 
   // Kortin selkäpuoli
-  "Card-Back": require("../assets/Cards/Card around.png"),
+  "Card-Back": require("../assets/Cards/CardAround.png"),
   // Korttipakan selkäpuoli
   "Deck-Back": require("../assets/Cards/CardStack.png"),
   //Background image
@@ -92,6 +92,11 @@ const Blackjack: React.FC<BlackjackProps> = ({ navigation, tokenCount, setTokenC
   const [gameResult, setGameResult] = useState<string>(''); // Store result of the game
   const [winAmount, setWinAmount] = useState<number | null>(null); // Store win amount
   const [isDealerCardFaceDown, setIsDealerCardFaceDown] = useState(true); // Track if the second card is face down
+  const deckPosition = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const deckScale = useRef(new Animated.Value(1)).current;
+  const [deckAnimated, setDeckAnimated] = useState(false); // että animaatio ajetaan vain kerran
+  const [isAnimating, setIsAnimating] = useState(false);
+  const cardFlyPosition = useRef(new Animated.ValueXY({ x: -120, y: -190 })).current;
 
  // const deck = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
  const generateDeck = () => {
@@ -134,47 +139,80 @@ const shuffledDeck = generateDeck().sort(() => Math.random() - 0.5);
         aceCount--;
       }
       return value;
+    }; 
+
+    const resetDeckAnimation = () => {
+      deckPosition.setValue({ x: 0, y: 0 });
+      deckScale.setValue(1);
+      setDeckAnimated(false);
     };
-    
-   // Jakaminen
-   //const shuffledDeck = [...deck, ...deck, ...deck, ...deck];
-   //shuffledDeck.sort(() => Math.random() - 0.5);
 
-   const dealCards = () => {
-    if (tokenCount < betAmount) {
+   const dealCards = async () => {
+
+     if (tokenCount < betAmount || tokenCount <= 0 ) {
       alert("Not enough coins. Change your bet or earn more.");
-      setGameStatus("Start the Game"); 
-      return;
-    }
-  
-    if (tokenCount <= 0) {
-      setGameStatus('Start the Game');
-      setDealerCards([]);
-      setPlayerCards([]);
-      setGameResult('');
-      setWinAmount(null);
-      setIsDealerCardFaceDown(true);
-      return;
-    }
-    setTokenCount(prev => prev - betAmount);
+      setGameStatus("Start the Game");
+      resetDeckAnimation();
+      return; 
+    } 
 
+    if (gameStatus === 'Start the Game') {
+      // Animaation käynnistys
+      await new Promise(resolve => {
+        setIsAnimating(true);  // Aseta animaatio käynnissä olevaksi
+        Animated.parallel([
+          Animated.timing(deckPosition, {
+            toValue: { x: -120, y: -187.5 },
+            duration: 800,
+            useNativeDriver: true,
+            easing: Easing.inOut(Easing.ease),
+          }),
+          Animated.timing(deckScale, {
+            toValue: 0.57,
+            duration: 800,
+            useNativeDriver: true,
+            easing: Easing.inOut(Easing.ease),
+          }),
+        ]).start(resolve);  // callback "resolve" kutsutaan, kun animaatio on valmis
+      });
+  
+      setDeckAnimated(true);
+      setIsAnimating(false);  // Animaatio valmis, palautetaan tila
+    }
+    setIsAnimating(false);  // Animaatio valmis, palautetaan tila
+    setTokenCount(prev => prev - betAmount);
+  
     const dealerCard1 = shuffledDeck.pop()!;
     const dealerCard2 = shuffledDeck.pop()!;
     const playerCard1 = shuffledDeck.pop()!;
     const playerCard2 = shuffledDeck.pop()!;
+  
+    // Asetetaan kortit
+    setDealerCards([dealerCard1, dealerCard2]);
+    setPlayerCards([playerCard1, playerCard2]);
 
-   // Asetetaan kortit
-  setDealerCards([dealerCard1, dealerCard2]);
-  setPlayerCards([playerCard1, playerCard2]);
-    setGameStatus('Game in Progress');
-    setGameResult('');
-    setIsDealerCardFaceDown(true); // Ensure dealer's second card is face down
-  };
+      setGameStatus('');
+      setGameResult('');
+      setIsDealerCardFaceDown(true); // Ensure dealer's second card is face down
+    };
+
+const animateCardFromDeck = async (toX: number, toY: number) => {
+  cardFlyPosition.setValue({ x: -120, y: -190 }); // reset
+
+  await new Promise(resolve => {
+    Animated.timing(cardFlyPosition, {
+      toValue: { x: toX, y: toY },
+      duration: 500,
+      useNativeDriver: true,
+      easing: Easing.inOut(Easing.ease),
+    }).start(resolve);
+  });
+};
 
   const hit = () => {
     // Pop a card from the shuffled deck for the player
     const newPlayerCard = shuffledDeck.pop()!;
-    
+
     // Add this new card to the player's hand
     setPlayerCards(prev => [...prev, newPlayerCard]);
     
@@ -183,7 +221,7 @@ const shuffledDeck = generateDeck().sort(() => Math.random() - 0.5);
     
     // Check if the player busts
     if (playerValue > 21) {
-      setGameStatus('You Bust! Dealer Wins');
+      setGameStatus('    Bust!|You Lost');
       setGameResult('Dealer Wins');
       setWinAmount(0);
       setIsDealerCardFaceDown(false); // Reveal the dealer's second card
@@ -213,12 +251,12 @@ const shuffledDeck = generateDeck().sort(() => Math.random() - 0.5);
       setWinAmount(betAmount * 2);
       setTokenCount(prev => prev + betAmount * 2);
     } else if (dealerValue === playerValue) {
-      setGameStatus('It\'s a Tie');
+      setGameStatus('It\'s a Tie!');
       setGameResult('Tie');
       setWinAmount(betAmount);
       setTokenCount(prev => prev + betAmount);
     } else {
-      setGameStatus('Dealer Wins');
+      setGameStatus('Dealer Wins!|   You Lost');
       setGameResult('Dealer Wins');
       setWinAmount(0);
     }
@@ -234,7 +272,7 @@ const startNewGame = () => {
   setGameResult('');  // Nollataan pelin tulos
   setWinAmount(null);  // Nollataan voiton määrä
   setIsDealerCardFaceDown(true); // Reset the face down card
-  dealCards(); // Immediately deal new cards instead of going to "Start the Game"
+  dealCards();
 };
 const isHitDisabled = calculateHandValue(playerCards) >= 21;
 // ennen returnia tai JSX:ää määrittele nämä:
@@ -254,8 +292,16 @@ const showMoveBetControls = gameStatus === 'Start the Game';
       </View>
   
       <View style={styles.statusContainer}>
+      {!isAnimating && (
+    <>
         {gameStatus === 'Start the Game' ? (
           <Text style={styles.startGameText}>{gameStatus}</Text>
+        ) : gameStatus.includes('|') ? (
+          <Text style={styles.gameStatus}>
+            <Text style={{ color: 'red' }}>{gameStatus.split('|')[0]}</Text>
+            {'\n'}
+            {gameStatus.split('|')[1]}
+          </Text>
         ) : (
           <Text style={styles.gameStatus}>{gameStatus}</Text>
         )}
@@ -263,13 +309,32 @@ const showMoveBetControls = gameStatus === 'Start the Game';
         {winAmount !== null && winAmount > 0 && (
           <Text style={[styles.winText, { position: 'absolute' }]}>{`Win: ${winAmount}`}</Text>
         )}
+        </>
+         )}
       </View>
-  
+      
+        {gameStatus !== 'Start the Game' && (
+          <Image source={cardImages["Deck-Back"]} style={styles.deckImageSmall} />
+        )}
+
       <View style={styles.cardsContainer}>
-        {gameStatus === 'Start the Game' ? ( 
-          <Image source={cardImages["Deck-Back"]} style={styles.deckImage} />
+      {gameStatus === 'Start the Game' && !deckAnimated ? (
+          <Animated.Image
+            source={cardImages["Deck-Back"]}
+            style={[
+              styles.deckImage,
+              {
+                transform: [
+                  { translateX: deckPosition.x },
+                  { translateY: deckPosition.y },
+                  { scale: deckScale },
+                ],
+              },
+            ]}
+          />
         ) : (
           <>
+          {/* <View style={{ marginTop: 20 }} /> */}
         <Text style={styles.cardText}>
           Dealer's Cards: {calculateHandValue(dealerCards, isDealerCardFaceDown)}
         </Text>
@@ -282,6 +347,7 @@ const showMoveBetControls = gameStatus === 'Start the Game';
           />
               ))}
             </View>
+            {/* <View style={{ marginTop: 25, marginBottom: 5 }} /> */}
             <Text style={styles.cardText}>Player's Cards: {calculateHandValue(playerCards)}</Text>
             <View style={styles.cardImages}>
               {playerCards.map((card, index) => (
@@ -293,7 +359,7 @@ const showMoveBetControls = gameStatus === 'Start the Game';
 </View>
   
       <View style={styles.controls}>
-        {gameStatus === 'Game in Progress' && (
+        {gameStatus === '' && (
           <>
             <TouchableOpacity 
               onPress={hit} 
@@ -312,8 +378,9 @@ const showMoveBetControls = gameStatus === 'Start the Game';
             <Text style={styles.actionText}>Deal</Text>
           </TouchableOpacity>
         )}
-        {gameStatus === 'Start the Game' && !gameResult && (
-          <TouchableOpacity onPress={dealCards} style={[styles.actionButton, styles.startGameButton]}>
+         {gameStatus === 'Start the Game' && !gameResult && (
+          <TouchableOpacity onPress={dealCards} style={[styles.actionButton, styles.startGameButton, isAnimating && styles.disabledButton]}
+          disabled={isAnimating}>
             <Text style={styles.actionText}>Deal</Text>
           </TouchableOpacity>
         )}
@@ -324,7 +391,8 @@ const showMoveBetControls = gameStatus === 'Start the Game';
     <>
       <TouchableOpacity 
         onPress={() => setBetAmount(prev => Math.max(1, prev - 1))} 
-        style={styles.betButton}
+        style={[ styles.betButton, isAnimating && styles.disabledButton]}
+        disabled={isAnimating}
       >
         <Text style={styles.betText}>-</Text>
       </TouchableOpacity>
@@ -333,7 +401,8 @@ const showMoveBetControls = gameStatus === 'Start the Game';
 
       <TouchableOpacity 
         onPress={() => setBetAmount(prev => prev + 1)} 
-        style={styles.betButton}
+        style={[ styles.betButton, isAnimating && styles.disabledButton]}
+        disabled={isAnimating}
       >
         <Text style={styles.betText}>+</Text>
       </TouchableOpacity>
@@ -390,7 +459,6 @@ gameStatus: {
   fontSize: 24,
   fontWeight: 'bold',
   position: 'absolute',
-  top: -10, // Säädä tarpeen mukaan
   //bottom: 1, // pienempi arvo nostaa tekstiä ylemmäs
   color: '#fff',
 },
@@ -402,7 +470,15 @@ cardText: {
   fontSize: 18,
   fontWeight: 'bold',
   color: '#fff',
+  //position: 'absolute',
 },
+/* cardText1: {
+  fontSize: 18,
+  fontWeight: 'bold',
+  color: '#fff',
+  position: 'absolute',
+  top: 140, // Säädä tätä arvoa tarpeen mukaan
+}, */
 cardImages: {
   flexDirection: 'row',
   marginVertical: 10,
@@ -413,15 +489,17 @@ cardImage: {
   marginHorizontal: 2.5,
 },
 controls: {
-  marginTop: 30,
   flexDirection: 'row',
-  justifyContent: 'space-around',
+  justifyContent: 'center',
+  gap: 50, // lisää väli nappeihin
   width: '80%',
+  marginTop: 30,
 },
 actionButton: {
   backgroundColor: '#007bff',
   padding: 15,
   borderRadius: 10,
+  top: 5,
   //marginTop: 20,
 },
 actionText: {
@@ -433,6 +511,11 @@ betControls: {
   flexDirection: 'row',
   alignItems: 'center',
   marginTop: 25,
+  borderWidth: 1,
+  borderRadius: 10,
+  borderColor: '#fff',
+  padding: 10,
+  backgroundColor: '#1f1e1e',
 },
 betButton: {
   width: 50,
@@ -457,7 +540,8 @@ winText: {
   fontSize: 20,
   color: '#0FFF50',
   fontWeight: 'bold',
-  marginTop: 25,
+  position: 'relative',
+  marginTop: 30,
 },
 disabledButton: {
   backgroundColor: '#bdc3c7',
@@ -475,7 +559,7 @@ startGameText: {
   color: '#fff',
 },
 startGameButton: {
-  top: 40,
+  top: 50,
   marginTop: 20,
   // marginTop: 20,  // Voit säätää tätä arvoa tarpeen mukaan
   // position: 'absolute',
@@ -483,6 +567,13 @@ startGameButton: {
 },
 moveBetControls:{
 top: 45,
+},
+deckImageSmall: {
+  width: 60,
+  height: 82,
+  top: 40,
+  left: 30,
+  position: 'absolute',
 },
 });
 
