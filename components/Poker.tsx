@@ -569,10 +569,10 @@ const handleDoubleCardSelection = (selectedIndex: number) => {
       marginVertical: 5, // Lisää tilaa rivien väliin
     },
     dealButtonInitial: {
-      marginTop: 280,  // Sijoittaa "Deal"-napin alkuun
+      marginTop: 300,  // Sijoittaa "Deal"-napin alkuun
     },
     dealButtonAfter: {
-      marginTop: 160,  // Sijoittaa "Deal"-napin normaalisti
+      marginTop: 180,  // Sijoittaa "Deal"-napin normaalisti
     },
     betControlsInitial: {
       marginTop: 20,  // Sijoittaa "Bet"-osio alkuun

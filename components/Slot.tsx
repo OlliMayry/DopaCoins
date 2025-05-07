@@ -1,10 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Animated, Easing } from 'react-native';
+import DoubleModal from '../components/DoubleModal'; 
 
 interface SlotProps {
   tokenCount: number;
   setTokenCount: React.Dispatch<React.SetStateAction<number>>;
 }
+
+const slotImages: { [key: string]: any } = {
+  "Camel": require("../assets/Slot/Camel.png"),
+  "Donkey": require("../assets/Slot/Donkey.png"),
+ }
 
 const Slot: React.FC<SlotProps> = ({ tokenCount, setTokenCount }) => {
   const [betAmount, setBetAmount] = useState(1);
@@ -13,6 +19,9 @@ const Slot: React.FC<SlotProps> = ({ tokenCount, setTokenCount }) => {
   const [winAmount, setWinAmount] = useState<number | null>(null);
   const [flashingRow, setFlashingRow] = useState<Array<[number, number]> | null>(null);
 const [isFlashing, setIsFlashing] = useState(false);
+const [pendingWin, setPendingWin] = useState<number | null>(null);
+const [isDoubleMode, setIsDoubleMode] = useState(false);
+const [doubleModalVisible, setDoubleModalVisible] = useState(false);
 
   // Symbols for the slot machine
   const slotSymbols = ['🍒', '🍋', '🍊', '🍉', '🍇', '🍀', '⭐', '7️⃣'];
@@ -36,7 +45,6 @@ const [isFlashing, setIsFlashing] = useState(false);
     const randomIndex = Math.floor(Math.random() * weightedSymbols.length);
     return weightedSymbols[randomIndex];
   };
-  
 
   // Generate random symbols for each reel (6 symbols per reel)
   const generateReels = () => {
@@ -57,44 +65,45 @@ const [isFlashing, setIsFlashing] = useState(false);
 
   // Function to handle the spin
   const spin = () => {
-    if (isSpinning || tokenCount < betAmount) return;
-
-    setTokenCount((prev) => prev - betAmount);
+    if (isSpinning) return;
+  
+    // Jos voitto odottaa, lisää se saldoon
+    if (pendingWin !== null) {
+      setTokenCount(prev => prev + pendingWin);
+      setPendingWin(null);
+      setIsDoubleMode(false);
+      setWinAmount(null);
+      return;
+    }
+  
+    if (tokenCount < betAmount) return;
+  
+    setTokenCount(prev => prev - betAmount);
     setIsSpinning(true);
     setWinAmount(null);
-
-    // Reset winning animation
     setFlashingRow(null);
     setIsFlashing(false);
-    flashAnim.setValue(1); // Reset opacity and scale animation
-
-    // Generate random reels
+    flashAnim.setValue(1);
+  
     const spinningReels = generateReels();
     setReels(spinningReels);
-
-    // Reset the animation value before starting the spin
     reelAnims.forEach(anim => anim.setValue(0));
-
-    // Animate the reels (create a scrolling effect)
-    Animated.stagger(500, reelAnims.map((anim, index) =>
+  
+    Animated.stagger(500, reelAnims.map(anim =>
       Animated.timing(anim, {
         toValue: 1,
-        duration: 1000, // Shortened duration for faster spin
-        easing: Easing.inOut(Easing.ease), // Smoother easing
+        duration: 1000,
+        easing: Easing.inOut(Easing.ease),
         useNativeDriver: true
       })
     )).start(() => {
-      // After the animation, set the final result
-      // After the animation, set the final result
-    const row1 = [spinningReels[0][1], spinningReels[1][1], spinningReels[2][1]];
-    const row2 = [spinningReels[0][2], spinningReels[1][2], spinningReels[2][2]];
-    const row3 = [spinningReels[0][3], spinningReels[1][3], spinningReels[2][3]];
-    const row4 = [spinningReels[0][1], spinningReels[1][2], spinningReels[2][3]];
-    const row5 = [spinningReels[0][3], spinningReels[1][2], spinningReels[2][1]];
-
-          // Check if user wins based on any row
-          checkWin(row1, row2, row3, row4, row5);
-
+      const row1 = [spinningReels[0][1], spinningReels[1][1], spinningReels[2][1]];
+      const row2 = [spinningReels[0][2], spinningReels[1][2], spinningReels[2][2]];
+      const row3 = [spinningReels[0][3], spinningReels[1][3], spinningReels[2][3]];
+      const row4 = [spinningReels[0][1], spinningReels[1][2], spinningReels[2][3]];
+      const row5 = [spinningReels[0][3], spinningReels[1][2], spinningReels[2][1]];
+  
+      checkWin(row1, row2, row3, row4, row5);
       setIsSpinning(false);
     });
   };
@@ -130,14 +139,17 @@ const [isFlashing, setIsFlashing] = useState(false);
   
     if (totalWin > 0) {
       setWinAmount(totalWin);
-      setTokenCount((prev) => prev + totalWin);
+      setPendingWin(totalWin);
+      setIsDoubleMode(true); // aktivoi double-mahdollisuus
       setFlashingRow(winningPositions);
       setIsFlashing(true);
     } else {
       setWinAmount(0);
       setFlashingRow(null);
+      setPendingWin(null);
+      setIsDoubleMode(false);
     }
-  };  
+  };
 
           useEffect(() => {
             if (!isFlashing) return;
@@ -201,8 +213,7 @@ const [isFlashing, setIsFlashing] = useState(false);
         </Animated.View>
       </View>
     ));
-  };
-  
+  }; 
 
   // Initialize reels with random symbols when the component is first loaded
   useEffect(() => {
@@ -225,14 +236,46 @@ const [isFlashing, setIsFlashing] = useState(false);
         style={[styles.spinButton, { backgroundColor: isSpinning ? '#BDC3C7' : '#3498db' }]}
         disabled={isSpinning}
       >
-        <Text style={styles.spinButtonText}>Spin</Text>
+        <Text style={styles.spinButtonText}>
+          {pendingWin !== null ? 'Collect' : 'Spin'}
+        </Text>
       </TouchableOpacity>
+
+      <TouchableOpacity
+  onPress={() => setDoubleModalVisible(true)} // tämä korjattu
+  style={[
+    styles.spinButton,
+    {
+      backgroundColor: pendingWin !== null ? '#e67e22' : '#bdc3c7',
+      marginTop: 10,
+    },
+  ]}
+  disabled={pendingWin === null}
+>
+  <Text style={styles.spinButtonText}>Double</Text>
+</TouchableOpacity>
+
+<DoubleModal
+  visible={doubleModalVisible}
+  startingAmount={pendingWin ?? 0}
+  onClose={() => setDoubleModalVisible(false)}
+  onCollect={(finalAmount) => {
+    // Tee mitä haluat loppusummalla:
+    if (finalAmount > 0) {
+      // lisää pelaajalle rahat
+      console.log('Collected winnings:', finalAmount);
+    } else {
+      console.log('Player lost the double game.');
+    }
+    setPendingWin(null); // Nollaa voitto
+  }}
+/>
 
       <View style={styles.betControls}>
       <TouchableOpacity
           onPress={() => setBetAmount((prev) => Math.max(1, prev - 1))}
           style={[styles.betButton, isSpinning && { backgroundColor: '#BDC3C7' }]} // Grey out when spinning
-          disabled={isSpinning} // Disable while spinning
+          disabled={isSpinning || pendingWin !== null } // Disable while spinning or doublin
         >
           <Text style={styles.betText}>-</Text>
         </TouchableOpacity>
@@ -264,6 +307,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#f4f4f4',
   },
+  reelImage: {
+    width: 60, // Adjust the width as needed
+    height: 60, // Adjust the height as needed
+    marginVertical: 5,
+  },
   tokenContainer: {
     position: 'absolute',
     top: 10,
@@ -276,7 +324,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 20,
+    marginTop: 20,
+    marginBottom: 10,
     borderWidth: 2,
     borderColor: '#000',
     borderRadius: 10,
@@ -310,7 +359,7 @@ const styles = StyleSheet.create({
   flashingSymbol: {
     color: 'yellow', // Bright color
     fontWeight: 'bold',
-    fontSize: 70, // Increase size for emphasis
+    fontSize: 60, // Increase size for emphasis
     textShadowColor: 'rgba(255, 165, 0, 1)', // Stronger contrast (orange glow)
     textShadowOffset: { width: 4, height: 4 }, // More offset for shadow
     textShadowRadius: 20, // Bigger glow effect
@@ -322,7 +371,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
-    marginTop: 20,
+    marginTop: 10,
+    marginBottom: 5,
   },
   spinButtonText: {
     fontSize: 20,
@@ -332,7 +382,7 @@ const styles = StyleSheet.create({
   betControls: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 10,
   },
   betButton: {
     width: 50,
@@ -357,9 +407,15 @@ const styles = StyleSheet.create({
     color: '#27ae60',
     fontWeight: 'bold',
     position: 'absolute',
-    top: 80,
+    top: 70,
     textAlign: 'center',
     width: '100%',
+  },
+  reelSymbolContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 60, // Varmistetaan, että kaikki symbolit ovat samassa koossa
+    height: 60,
   },
 });
 

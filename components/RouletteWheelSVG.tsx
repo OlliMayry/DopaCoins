@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Image } from 'react-native';
 import Svg, { G, Path, Text as SvgText, Circle } from 'react-native-svg';
-import { Animated } from 'react-native';
+import { Animated, Easing } from 'react-native';
 
 const wheelImage = require("../assets/Roulette/Wheel.png");
 
@@ -20,17 +20,16 @@ const getColor = (num: number) => {
   return 'black';
 };
 
-const RouletteWheelSVG = ({ size = 300, rotation, highlightedSector }: { size?: number, rotation: Animated.Value, highlightedSector: number | null }) => {
+const RouletteWheelSVG = ({ size = 290, rotation, highlightedSector }: { size?: number, rotation: Animated.Value, highlightedSector: number | null }) => {
   const radius = size / 2;
   const angle = (2 * Math.PI) / numbers.length;
   const innerCircleRadius = size * 0.35; // Radius for the inner circle
   const numInnerSectors = 37;  // Change this value to adjust how many sectors you want in the inner circle.
 
   return (
-    <View>
+    <View style={{ overflow: 'visible' }}>
       <Svg width={size} height={size}>
         <G origin={`${radius}, ${radius}`}>
-          {/* Outer wheel sectors and numbers */}
           {numbers.map((num, index) => {
             const startAngle = index * angle;
             const endAngle = startAngle + angle;
@@ -50,34 +49,27 @@ const RouletteWheelSVG = ({ size = 300, rotation, highlightedSector }: { size?: 
             const midAngle = startAngle + angle / 2;
             const labelX = radius + (radius * 0.85) * Math.cos(midAngle);
             const labelY = radius + (radius * 0.85) * Math.sin(midAngle);
-           // const isHighlighted = highlightedSector === index;
 
             return (
               <G key={num}>
-                <Path
-                  d={pathData}
-                  fill={getColor(num)}
-                  stroke="none"
-                  //stroke={isHighlighted ? 'yellow' : 'none'}
-                  //strokeWidth={isHighlighted ? 3 : 0}
-                />
-             <SvgText
-              x={labelX}
-              y={labelY}
-              fill="white"
-              fontSize={size * 0.03}
-              fontWeight="bold"
-              textAnchor="middle"
-              alignmentBaseline="middle"
-              transform={`rotate(${(midAngle * 180) / Math.PI + 90}, ${labelX}, ${labelY})`}
-            >
-              {num}
-            </SvgText>
+                <Path d={pathData} fill={getColor(num)} />
+                <SvgText
+                  x={labelX}
+                  y={labelY}
+                  fill="white"
+                  fontSize={size * 0.03}
+                  fontWeight="bold"
+                  textAnchor="middle"
+                  alignmentBaseline="middle"
+                  transform={`rotate(${(midAngle * 180) / Math.PI + 90}, ${labelX}, ${labelY})`}
+                >
+                  {num}
+                </SvgText>
               </G>
             );
           })}
         </G>
-        
+
         <Circle
           cx={radius}
           cy={radius}
@@ -87,36 +79,33 @@ const RouletteWheelSVG = ({ size = 300, rotation, highlightedSector }: { size?: 
           strokeWidth={3}
         />
 
-        {/* Highlight-reuna uloimman kehän päälle */}
-{highlightedSector !== null && (() => {
-  const startAngle = highlightedSector * angle;
-  const endAngle = startAngle + angle;
+        {/* Highlight the winning sector */}
+        {highlightedSector !== null && (() => {
+          const startAngle = highlightedSector * angle;
+          const endAngle = startAngle + angle;
+          const outerX1 = radius + radius * Math.cos(startAngle);
+          const outerY1 = radius + radius * Math.sin(startAngle);
+          const outerX2 = radius + radius * Math.cos(endAngle);
+          const outerY2 = radius + radius * Math.sin(endAngle);
+          const largeArc = angle > Math.PI ? 1 : 0;
 
-  const outerX1 = radius + radius * Math.cos(startAngle);
-  const outerY1 = radius + radius * Math.sin(startAngle);
-  const outerX2 = radius + radius * Math.cos(endAngle);
-  const outerY2 = radius + radius * Math.sin(endAngle);
-  const largeArc = angle > Math.PI ? 1 : 0;
+          const pathData = `
+            M ${radius} ${radius}
+            L ${outerX1} ${outerY1}
+            A ${radius} ${radius} 0 ${largeArc} 1 ${outerX2} ${outerY2}
+            Z
+          `;
 
-  const pathData = `
-    M ${radius} ${radius}
-    L ${outerX1} ${outerY1}
-    A ${radius} ${radius} 0 ${largeArc} 1 ${outerX2} ${outerY2}
-    Z
-  `;
+          return (
+            <Path
+              d={pathData}
+              fill="rgba(255, 255, 0, 0.2)"
+              stroke="yellow"
+              strokeWidth={3}
+            />
+          );
+        })()}
 
-  return (
-    <Path
-      d={pathData}
-      fill="none"
-      stroke="yellow"
-      strokeWidth={3}
-    />
-  );
-})()}
-
-        
-        {/* Inner circle */}
         <Circle
           cx={radius}
           cy={radius}
@@ -126,9 +115,7 @@ const RouletteWheelSVG = ({ size = 300, rotation, highlightedSector }: { size?: 
           strokeWidth={3}
         />
 
-        {/* Draw radial lines to create sectors within the inner circle */}
         {Array.from({ length: numInnerSectors }).map((_, i) => {
-          // Compute angle for each radial line
           const theta = (2 * Math.PI / numInnerSectors) * i;
           const x = radius + innerCircleRadius * Math.cos(theta);
           const y = radius + innerCircleRadius * Math.sin(theta);
@@ -141,7 +128,7 @@ const RouletteWheelSVG = ({ size = 300, rotation, highlightedSector }: { size?: 
             />
           );
         })}
-        
+
  {/* Pallo – siirretty oikein silmukan ulkopuolelle */}
  {highlightedSector !== null && (() => {
           const midAngle = (highlightedSector + 0.5) * angle;
@@ -164,8 +151,8 @@ const RouletteWheelSVG = ({ size = 300, rotation, highlightedSector }: { size?: 
         })()}
 
       </Svg>
-      
-      {/* Overlay the wheel image in center */}
+
+      {/* Overlay the wheel image */}
       <Image
         source={wheelImage}
         style={[

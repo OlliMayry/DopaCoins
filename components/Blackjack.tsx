@@ -162,7 +162,7 @@ const shuffledDeck = generateDeck().sort(() => Math.random() - 0.5);
         setIsAnimating(true);  // Aseta animaatio käynnissä olevaksi
         Animated.parallel([
           Animated.timing(deckPosition, {
-            toValue: { x: -120, y: -187.5 },
+            toValue: { x: -120, y: -210 },
             duration: 800,
             useNativeDriver: true,
             easing: Easing.inOut(Easing.ease),

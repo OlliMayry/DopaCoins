@@ -15,7 +15,6 @@ const CENTER_INDEX = Math.floor(REEL_LENGTH / 2);
 const SPIN_DURATION = 4000;
 
 const caseImages: { [key: string]: any } = {
- // Knife image
  "50x": require("../assets/Cases/Knife1.png"),
  "25x": require("../assets/Cases/AWP1.png"),
  "10x": require("../assets/Cases/AK1.png"),
@@ -308,7 +307,7 @@ top: '52.5%',
   },
   verticalLine: {
     position: 'absolute',
-    top: '22%',
+    top: '23.5%',
     left: '50%',
     width: 4,
     backgroundColor: '#e74c3c',

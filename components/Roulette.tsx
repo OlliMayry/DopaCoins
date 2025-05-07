@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, Alert, Image, ImageBackground } from 'react-native';
+import Svg, { G, Path, Text as SvgText, Circle } from 'react-native-svg';
 import RouletteWheelSVG from './RouletteWheelSVG';
 import RouletteBet from './RouletteBet';
 
@@ -30,8 +31,15 @@ const Roulette: React.FC<RouletteProps> = ({ tokenCount, setTokenCount }) => {
   const [winAmount, setWinAmount] = useState(0);
   const [highlightedSector, setHighlightedSector] = useState<number | null>(null);
 
+  const circleSize = 330;
+  const strokeWidth = 3;
+  const radius = (circleSize - strokeWidth) / 2;
+  const ballRadius = circleSize * 0.0175;
+  const ballDistanceFromCenter = radius * 0.63;
+
   const wheelRotation = useRef(new Animated.Value(0)).current;
   const currentRotation = useRef(0);
+  const ballAngle = useRef(new Animated.Value(0)).current;
 
   const sectorAngle = 360 / 37;
 
@@ -58,8 +66,8 @@ const Roulette: React.FC<RouletteProps> = ({ tokenCount, setTokenCount }) => {
       return;
     }
 
+    ballAngle.setValue(0);
     setHighlightedSector(null);
-  
     setIsSpinning(true);
     setWinningNumber(null);
     setTokenCount(prev => prev - betAmount);
@@ -68,10 +76,22 @@ const Roulette: React.FC<RouletteProps> = ({ tokenCount, setTokenCount }) => {
     const extraSpins = 5;  // Number of extra full rotations
     const randomAngleWithinCircle = Math.random() * 360;  // Random angle within one circle (0-360 degrees)
     const totalRotation = 360 * extraSpins + randomAngleWithinCircle;
-  
+
+     // Ball angle animation (pallon liike)
+  const ballAnimationDuration = 5000; // Same as wheel rotation duration
+  const ballFinalAngle = (totalRotation % 360) * (Math.PI / 180); // Convert degrees to radians
+
+  // Aloita pallon liike heti
+Animated.timing(ballAngle, {
+  toValue: ballFinalAngle,
+  duration: ballAnimationDuration,
+  easing: Easing.out(Easing.exp),
+  useNativeDriver: true,
+}).start();
+
     Animated.timing(wheelRotation, {
       toValue: currentRotation.current + totalRotation,
-      duration: 4000,
+      duration: ballAnimationDuration,
       easing: Easing.out(Easing.exp),
       useNativeDriver: true,
     }).start(() => {
@@ -87,10 +107,9 @@ const Roulette: React.FC<RouletteProps> = ({ tokenCount, setTokenCount }) => {
       const winningNum = wheelNumbers[index];
       setWinningNumber(winningNum);
       setHighlightedSector(index); // Set the highlighted sector to the winning index
-  
 
       const winningColor = getColorForNumber(winningNum);
-let payoutMultiplier = 0;
+      let payoutMultiplier = 0;
 
 if (selectedBet === winningNum.toString()) {
     payoutMultiplier = 35; // Yksittäinen numero
@@ -115,7 +134,8 @@ if (selectedBet === winningNum.toString()) {
       setWinAmount(currentWinAmount);
       setIsSpinning(false);
     });
-  };
+};
+
   const getBetBoxColor = (bet: string) => {
     const lowerBet = bet.toLowerCase();
   
@@ -133,8 +153,12 @@ if (selectedBet === winningNum.toString()) {
 
   const interpolatedRotation = wheelRotation.interpolate({
     inputRange: [0, 360],
-    outputRange: ['0deg', '360deg'],
+    outputRange: ['0deg', '-360deg'],
     extrapolate: 'extend',
+  });
+  const ballRotation = ballAngle.interpolate({
+    inputRange: [0, 2 * Math.PI],
+    outputRange: ['0deg', '360deg'],
   });
 
   return (
@@ -160,10 +184,44 @@ if (selectedBet === winningNum.toString()) {
           </Text>
         )}
       </View>
-     <View style={styles.wheelContainer}>
-  <Animated.View style={{ transform: [{ rotate: interpolatedRotation }] }}>
-    <RouletteWheelSVG rotation={wheelRotation} highlightedSector={highlightedSector} />
-  </Animated.View>
+  <View style={styles.wheelContainer}>
+     <Svg width={circleSize} height={circleSize} style={{ position: 'absolute' }}>
+  <Circle
+    cx={circleSize / 2}
+    cy={circleSize / 2}
+    r={radius}
+    fill="#5F0403"
+    stroke="#999999"
+    strokeWidth={strokeWidth}
+  />
+  </Svg>
+    <Animated.View style={{ transform: [{ rotate: interpolatedRotation }] }}>
+      <RouletteWheelSVG rotation={wheelRotation} highlightedSector={highlightedSector} />
+    </Animated.View>
+
+   {/* Pallo kiertää reunan sisällä vastakkaiseen suuntaan */}
+   <Animated.View
+  style={{
+    position: 'absolute',
+    width: circleSize,
+    height: circleSize,
+    transform: [
+      { rotate: ballRotation },            // 1) pyöreä liike
+      { translateY: -radius * 0.94 },      // 2) siirto yläreunaan
+    ],
+  }}
+>
+  <Svg width={circleSize} height={circleSize}>
+    <Circle
+      cx={circleSize / 2}
+      cy={circleSize / 2}
+      r={ballRadius}
+      fill="white"
+      stroke="black"
+      strokeWidth={1}
+    />
+  </Svg>
+</Animated.View>
 
   {/* Center "comp" image */}
   <Image
@@ -244,7 +302,7 @@ const styles = StyleSheet.create({
     height: 300,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop:20,
+    marginBottom: 10,
   },
   button: {
     padding: 10,
@@ -311,7 +369,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     position: 'absolute',
-    bottom: 80,
+    bottom: 110,
   },
   betLabel: {
     fontSize: 16,
