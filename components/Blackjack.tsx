@@ -307,7 +307,7 @@ const showMoveBetControls = gameStatus === 'Start the Game';
         )}
         {/* Voitto teksti */}
         {winAmount !== null && winAmount > 0 && (
-          <Text style={[styles.winText, { position: 'absolute' }]}>{`Win: ${winAmount}`}</Text>
+          <Text style={[styles.winText, { position: 'absolute' }]}>{`Win: ${winAmount.toFixed(2)}`}</Text>
         )}
         </>
          )}

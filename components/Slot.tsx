@@ -293,7 +293,7 @@ const [doubleModalVisible, setDoubleModalVisible] = useState(false);
 
       {winAmount !== null && (
         <Text style={[styles.winText, { zIndex: 2 }]}>
-          {winAmount > 0 ? `You Win: ${winAmount}` : 'Try Again!'}
+          {winAmount > 0 ? `You Win: ${winAmount.toFixed(2)}` : 'Try Again!'}
         </Text>
       )}
     </View>

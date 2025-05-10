@@ -161,7 +161,7 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
       {/* You Win Text */}
       {winAmount !== null && winAmount > 0 && (
       <Text style={[styles.winText, { position: 'absolute', bottom: 120 }]}>
-        {`Win: ${winAmount}`}
+        {`Win: ${winAmount.toFixed(2)}`}
       </Text>
     )}
 

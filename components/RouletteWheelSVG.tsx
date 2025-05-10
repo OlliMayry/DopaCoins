@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, StyleSheet, Image } from 'react-native';
 import Svg, { G, Path, Text as SvgText, Circle } from 'react-native-svg';
 import { Animated, Easing } from 'react-native';
@@ -20,11 +20,13 @@ const getColor = (num: number) => {
   return 'black';
 };
 
-const RouletteWheelSVG = ({ size = 290, rotation, highlightedSector }: { size?: number, rotation: Animated.Value, highlightedSector: number | null }) => {
+const RouletteWheelSVG = ({ size = 290, rotation, highlightedSector,  }: { size?: number, rotation: Animated.Value, highlightedSector: number | null, }) => {
   const radius = size / 2;
   const angle = (2 * Math.PI) / numbers.length;
   const innerCircleRadius = size * 0.35; // Radius for the inner circle
   const numInnerSectors = 37;  // Change this value to adjust how many sectors you want in the inner circle.
+
+
 
   return (
     <View style={{ overflow: 'visible' }}>
@@ -128,7 +130,6 @@ const RouletteWheelSVG = ({ size = 290, rotation, highlightedSector }: { size?: 
             />
           );
         })}
-
  {/* Pallo – siirretty oikein silmukan ulkopuolelle */}
  {highlightedSector !== null && (() => {
           const midAngle = (highlightedSector + 0.5) * angle;
@@ -137,6 +138,8 @@ const RouletteWheelSVG = ({ size = 290, rotation, highlightedSector }: { size?: 
 
           const ballX = radius + ballDistanceFromCenter * Math.cos(midAngle);
           const ballY = radius + ballDistanceFromCenter * Math.sin(midAngle);
+
+         // console.log(`Ball position: x=${ballX}, y=${ballY}, sector=${highlightedSector}`); 
 
           return (
             <Circle

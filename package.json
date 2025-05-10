@@ -14,7 +14,7 @@
     "@react-native-picker/picker": "2.11.0",
     "@react-navigation/native": "^6.1.14",
     "@react-navigation/stack": "^6.3.25",
-    "expo": "^53.0.8",
+    "expo": "^53.0.9",
     "expo-status-bar": "~2.2.3",
     "metro": "^0.82.0",
     "metro-config": "^0.81.0",

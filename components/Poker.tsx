@@ -604,7 +604,7 @@ const handleDoubleCardSelection = (selectedIndex: number) => {
     instructionText: {
       fontSize: 18,
       color: '#fff',
-      top: 10,
+      top: 180,
     },
     winTextGreen: {
       color: '#0FFF50',
