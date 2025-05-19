@@ -1,6 +1,13 @@
 // home.tsx
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  FlatList,
+  Dimensions,
+} from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from './types';
 
@@ -9,94 +16,118 @@ interface HomeProps {
   tokenCount: number;
 }
 
+const games = [
+  { key: 'Coin Flip', route: 'Coin' },
+  { key: 'Cases', route: 'Case' },
+  { key: 'Roulette', route: 'Roulette' },
+  { key: 'Crash', route: 'Crash' },
+  { key: 'Keno', route: 'Keno' },
+  { key: 'Blackjack', route: 'Blackjack' },
+  { key: 'Slot', route: 'Slot' },
+  { key: 'Poker', route: 'Poker' },
+];
+
 const Home: React.FC<HomeProps> = ({ navigation, tokenCount }) => {
-  const handlePlayCoinFlip = () => {
-    navigation.navigate('Coin');
+  const handleNavigate = (route: string) => {
+    navigation.navigate(route as keyof RootStackParamList);
   };
-  const handleOpenCase = () => {
-    navigation.navigate('Case');
-  };
-  const handlePlayRoulette = () => {
-    navigation.navigate('Roulette');
-  };
-  const handlePlayCrash = () => {
-    navigation.navigate('Crash');
-  };
-  const handlePlayKeno = () => {
-    navigation.navigate('Keno');
-  };
-  const handlePlayBlackjack = () => {
-    navigation.navigate('Blackjack');
-  };
-  const handlePlaySlot = () => {
-    navigation.navigate('Slot');
-  };
-  const handlePlayPoker = () => {
-    navigation.navigate('Poker');
-  };
-  
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>DopaCoins</Text>
+
       <View style={styles.tokenContainer}>
-      <Text style={styles.tokenText}>Coins: {tokenCount.toFixed(2)}</Text>
+        <Text style={styles.tokenLabel}>Coins</Text>
+        <Text style={styles.tokenText}>{tokenCount.toFixed(2)}</Text>
       </View>
-      <TouchableOpacity onPress={handlePlayCoinFlip} style={styles.button}>
-        <Text style={styles.buttonText}>Coin Flip</Text>
-      </TouchableOpacity>
-      {/* Cases Button */}
-      <TouchableOpacity onPress={handleOpenCase} style={styles.button}>
-        <Text style={styles.buttonText}>Cases</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={handlePlayRoulette} style={styles.button}>
-        <Text style={styles.buttonText}>Roulette</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={handlePlayCrash} style={styles.button}>
-        <Text style={styles.buttonText}>Crash</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={handlePlayKeno} style={styles.button}>
-        <Text style={styles.buttonText}>Keno</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={handlePlayBlackjack} style={styles.button}>
-        <Text style={styles.buttonText}>Blackjack</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={handlePlaySlot} style={styles.button}>
-        <Text style={styles.buttonText}>Slot Machine</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={handlePlayPoker} style={styles.button}>
-        <Text style={styles.buttonText}>Poker</Text>
-      </TouchableOpacity>
+
+      <FlatList
+        data={games}
+        keyExtractor={(item) => item.key}
+        numColumns={2}
+        contentContainerStyle={styles.list}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => handleNavigate(item.route)}
+            style={styles.button}
+          >
+            <Text style={styles.buttonText}>{item.key}</Text>
+          </TouchableOpacity>
+        )}
+      />
     </View>
   );
 };
 
+const { width } = Dimensions.get('window');
+const buttonWidth = (width / 2) - 30;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#121212',
+    paddingTop: 50,
+    paddingHorizontal: 20,
   },
   title: {
-    fontSize: 20,
-    marginBottom: 20,
-  },
-  button: {
-    margin: 10,
-    padding: 15,
-    backgroundColor: '#3498db',
-    borderRadius: 5,
-  },
-  buttonText: {
+    fontSize: 32,
+    fontWeight: '700',
     color: '#fff',
-  },
-  tokenText: {
-    fontSize: 16,
+    marginBottom: 20,
+    textAlign: 'center',
   },
   tokenContainer: {
     position: 'absolute',
     top: 10,
     right: 10,
+    backgroundColor: '#222',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 5,
+    elevation: 6,
+  },
+  tokenLabel: {
+    color: '#aaa',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  tokenText: {
+    color: '#ffd700',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  list: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  button: {
+    backgroundColor: '#3498db',
+    borderRadius: 12,
+    margin: 10,
+    width: buttonWidth,
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+
+    // Varjo (iOS)
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 5,
+
+    // Varjo (Android)
+    elevation: 5,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 18,
   },
 });
 

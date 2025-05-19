@@ -139,7 +139,7 @@ const Keno: React.FC<KenoProps> = ({ tokenCount, setTokenCount }) => {
     // 1) mittaa napin sijainti
     table.measureInWindow((sx, sy, sWidth, sHeight) => {
       const startX = sx + sWidth / 2 - 80 ; 
-      const startY = sy + sHeight / 2 - 120;
+      const startY = sy + sHeight / 2 - 150;
      // console.log("Start:", startX, startY);
   
       // 2) mittaa kohdenumeron sijainti

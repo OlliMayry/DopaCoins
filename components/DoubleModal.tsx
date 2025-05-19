@@ -36,34 +36,47 @@ const DoubleModal: React.FC<DoubleModalProps> = ({
   const [currentAmount, setCurrentAmount] = useState(startingAmount);
   const [selected, setSelected] = useState<number | null>(null);
   const [winningIndex, setWinningIndex] = useState(weightedRandomIndex([49.5, 1, 49.5]));
+  const [isCollectDisabled, setIsCollectDisabled] = useState(false); // Lisää tila collect-painikkeelle
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     if (visible) {
       setCurrentAmount(startingAmount);
       setSelected(null);
-      setWinningIndex(weightedRandomIndex([49.5, 1, 49.5]));
+      setIsCollectDisabled(false); // Resetoi collect-painike mahdollisuus
+      setWinningIndex(weightedRandomIndex([49, 2, 49]));
     }
   }, [visible, startingAmount]);
 
-  const handlePick = (index: number) => {
-    if (selected !== null) return;
+const handlePick = (index: number) => {
+  if (selected !== null) return;
 
-    setSelected(index);
-    const isCorrect = index === winningIndex;
+  setSelected(index);
+    setIsProcessing(true);
+  const isCorrect = index === winningIndex;
 
+  if (!isCorrect) {
+    setIsCollectDisabled(true); // Harmaa "Collect" heti kun häviää
+
+    // Odota 5 sekuntia ennen sulkemista ja 0:n palautusta
     setTimeout(() => {
-      if (isCorrect) {
-        const multiplier = options[index].multiplier;
-        const newAmount = currentAmount * multiplier;
-        setCurrentAmount(newAmount);
-        setSelected(null);
-        setWinningIndex(weightedRandomIndex([49.5, 1, 49.5]));
-      } else {
-        onCollect(0);
-        onClose();
-      }
+      onCollect(0);
+      onClose();
     }, 1000);
-  };
+
+    return;
+  }
+
+  // Jos voittaa, päivitä voitto ja resetoi
+  setTimeout(() => {
+    const multiplier = options[index].multiplier;
+    const newAmount = currentAmount * multiplier;
+    setCurrentAmount(newAmount);
+    setSelected(null);
+    setWinningIndex(weightedRandomIndex([49.5, 1, 49.5]));
+    setIsProcessing(false); // Nyt voi taas kerätä
+  }, 1000);
+};
 
   return (
     <Modal visible={visible} transparent animationType="fade">
@@ -84,17 +97,24 @@ const DoubleModal: React.FC<DoubleModalProps> = ({
                 disabled={selected !== null}
               >
                 <Text style={styles.emoji}>{opt.label}</Text>
+                <Text style={styles.multiplierText}>{opt.multiplier}x</Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <TouchableOpacity
-            style={styles.collectButton}
-            onPress={() => {
-              onCollect(currentAmount);
-              onClose();
-            }}
-          >
+            <TouchableOpacity
+  style={[
+    styles.collectButton,
+    (isCollectDisabled || isProcessing) && styles.collectButtonDisabled,
+  ]}
+          onPress={() => {
+    if (!isCollectDisabled && !isProcessing) {
+      onCollect(currentAmount);
+      onClose();
+    }
+  }}
+  disabled={isCollectDisabled || isProcessing}
+>
             <Text style={styles.collectText}>Collect {currentAmount.toFixed(2)}</Text>
           </TouchableOpacity>
         </View>
@@ -155,6 +175,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  collectButtonDisabled: {
+  backgroundColor: '#bdc3c7', // selkeä harmaa
+},
+multiplierText: {
+  fontSize: 16,
+  fontWeight: 'bold',
+  textAlign: 'center',
+  marginTop: 4,
+  color: '#333',
+},
 });
 
 export default DoubleModal;

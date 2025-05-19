@@ -402,7 +402,7 @@ const handleDoubleCardSelection = (selectedIndex: number) => {
                     onPress={handleCashOut}
                     style={[styles.button, styles.cashOutButton]}
                   >
-                    <Text style={styles.buttonText}>Cash Out</Text>
+                    <Text style={styles.buttonText}>Collect</Text>
                   </TouchableOpacity>
                 </View>
               )}
