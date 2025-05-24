@@ -284,9 +284,10 @@ const handleDoubleCardSelection = (selectedIndex: number) => {
       <ImageBackground source={cardImages["Background"]} style={styles.background}>
         <View style={styles.container}>
           <Image source={cardImages["Deck-Back"]} style={styles.deckBack} />
-          <View style={styles.tokenContainer}>
-            <Text style={styles.tokenText}>Coins: {tokenCount.toFixed(2)}</Text>
-          </View>
+<View style={styles.tokenContainer}>
+        <Text style={styles.tokenLabel}>Coins</Text>
+        <Text style={styles.tokenText}>{tokenCount.toFixed(2)}</Text>
+      </View>
     
           {/* Show either the doubling view or the normal game */}
           {isDoubling ? (
@@ -465,14 +466,30 @@ const handleDoubleCardSelection = (selectedIndex: number) => {
        // zIndex: 1,  Tämä varmistaa, että kuva tulee näkyviin ennen kortteja
         top: 40,
     },
-    tokenContainer: {
-      position: 'absolute',
-      top: 10,
-      right: 10,
-    },
-    tokenText: {
-      fontSize: 16,
-      color: '#fff',
+   tokenContainer: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: '#222',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 5,
+    elevation: 6,
+  },
+  tokenLabel: {
+    color: '#aaa',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  tokenText: {
+    color: '#ffd700',
+    fontSize: 16,
+    fontWeight: 'bold',
     },
     button: {
       backgroundColor: '#007bff',

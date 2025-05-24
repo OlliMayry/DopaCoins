@@ -271,8 +271,9 @@ const interpolatedRotation = wheelRotation.interpolate({
 
 
 <View style={styles.tokenContainer}>
-      <Text style={styles.tokenText}>Coins: {tokenCount.toFixed(2)}</Text>
-      </View>
+          <Text style={styles.tokenLabel}>Coins</Text>
+          <Text style={styles.tokenText}>{tokenCount.toFixed(2)}</Text>
+        </View>
       <TouchableOpacity
           onPress={spinRoulette}
           disabled={isSpinning || !selectedBet}   // Disable if spinning or no bet is set
@@ -369,10 +370,26 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 10,
     right: 10,
+    backgroundColor: '#222',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 5,
+    elevation: 6,
+  },
+  tokenLabel: {
+    color: '#aaa',
+    fontSize: 12,
+    fontWeight: '600',
   },
   tokenText: {
+    color: '#ffd700',
     fontSize: 16,
-    color: '#fff',
+    fontWeight: 'bold',
   },
   betText: {
     position: 'absolute',

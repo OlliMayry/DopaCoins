@@ -155,8 +155,9 @@ const Case: React.FC<CaseProps> = ({ navigation, tokenCount, setTokenCount }) =>
     <ImageBackground source={caseImages["Background"]} style={styles.background}>
     <View style={styles.container}>
       <View style={styles.tokenContainer}>
-        <Text style={styles.tokenText}>Coins: {tokenCount.toFixed(2)}</Text>
-      </View>
+                <Text style={styles.tokenLabel}>Coins</Text>
+                <Text style={styles.tokenText}>{tokenCount.toFixed(2)}</Text>
+              </View>
 
       {/* You Win Text */}
       {winAmount !== null && winAmount > 0 && (
@@ -264,10 +265,26 @@ top: '52.5%',
     position: 'absolute',
     top: 10,
     right: 10,
+    backgroundColor: '#222',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 5,
+    elevation: 6,
+  },
+  tokenLabel: {
+    color: '#aaa',
+    fontSize: 12,
+    fontWeight: '600',
   },
   tokenText: {
+    color: '#ffd700',
     fontSize: 16,
-    color: '#fff',
+    fontWeight: 'bold',
   },
   caseBox: {
     width: 200,

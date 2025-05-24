@@ -75,6 +75,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
     marginBottom: 20,
+    marginTop: 20,
     textAlign: 'center',
   },
   tokenContainer: {
@@ -99,7 +100,7 @@ const styles = StyleSheet.create({
   },
   tokenText: {
     color: '#ffd700',
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   list: {
